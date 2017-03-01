@@ -8,19 +8,21 @@
 using namespace std;
 using glm::vec3;
 using glm::mat3;
+using glm::mat4;
+using glm::vec4;
 
 class Camera
 {
 public:
-    vec3 pos;
+    mat4 pos;
     mat3 R_x, R_y;
 
-    Camera (vec3 pos);
+    Camera (mat4 pos);
 
-    void move (vec3);
+    void move (mat4 move);
     void rotate (float, float);
 
-    vec3 transform(vec3);
+    vec4 transform(vec4);
     vec3 transform1(vec3);
     friend ostream& operator<<(ostream& os, const Camera& cam);
 };

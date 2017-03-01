@@ -1,23 +1,23 @@
-//
-// Created by John Griffith on 20/02/2017.
-//
-
 #include "Lighting.h"
 
 
-
-
-Lighting::Lighting (vec3 pos, vec3 colour) : pos(pos),colour(colour)
+Lighting::Lighting (glm::mat4 pos, vec3 colour) : pos(pos),colour(colour)
 {
-
+  inv = glm::inverse(pos);
 }
 
-void Lighting::move (vec3 movement)
+void Lighting::move (glm::mat4 movement)
 {
   pos += movement;
 }
 
-vec3 Lighting::transform(vec3 p)
+vec4 Lighting::transform(vec4 p)
 {
-  return (p - pos);
+  return p * pos;
+}
+
+
+vec4 Lighting::transformi(vec4 p)
+{
+  return p * inv;
 }

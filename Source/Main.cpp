@@ -16,8 +16,16 @@ int main(int argc, char* argv[] )
 {
 	vector<Triangle> triangles;
 
-	vec3 cameraPos(0,0,-3);
-  vec3 lightingPos(1,1,-3);
+	mat4 cameraPos(1,0,0,0
+								,0,1,0,0
+								,0,0,1,3
+								,0,0,0,1);
+
+	mat4 lightingPos(1,0,0,1
+									,0,1,0,1
+									,0,0,1,3
+									,0,0,0,1);
+
   vec3 lightColour(10,10,10);
 	Camera camera(cameraPos);
 	Lighting lighting(lightingPos, lightColour);
@@ -54,12 +62,13 @@ bool ProcessInput(int& t, Camera & camera )
 	t = t2;
 	float sf = 0.002f;
 	//cout << "Render time: " << dt << " ms." << endl;
-	cout << "Camera pos: " << camera << endl;
+	//cout << "Camera pos: " << camera << endl;
 	Uint8* keystate = SDL_GetKeyState( 0 );
 
-	vec3 forward(0, 0, 1);
-	vec3 down(0, 1, 0);
-	vec3 right(1,0,0);
+
+	mat4 forward (0,0,0,0 ,0,0,0,0 ,0,0,0,1, 0,0,0,0);
+	mat4 down (0,0,0,0 ,0,0,0,-1 ,0,0,0,0, 0,0,0,0);
+	mat4 right (0,0,0,-1 ,0,0,0,0 ,0,0,0,0, 0,0,0,0);
 
 	forward *= sf * dt;
 	right *= sf * dt;

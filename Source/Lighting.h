@@ -8,17 +8,24 @@
 #include <glm/glm.hpp>
 using namespace std;
 using glm::vec3;
+using glm::vec4;
+using glm::mat4;
 class Lighting {
 
-  public:
-  Lighting (vec3 pos, vec3 colour);
-  vec3 pos;
-  vec3 colour;
+public:
+		Lighting(mat4 pos, vec3 colour);
 
-  void move (vec3);
-  vec3 transform(vec3);
+		mat4 pos;
+		mat4 inv;
+		vec3 colour;
 
+		void move(mat4 m);
+
+		vec4 transform(vec4 t);
+
+		vec4 transformi(vec4 t);
 };
+
 
 
 #endif //COMPUTER_GRAPHICS_LIGHTING_H

@@ -4,8 +4,8 @@
 #include "Renderer.h"
 #include "Lighting.h"
 #include "TestModel.h"
-
-
+#include "SDLauxiliary.h"
+#include <glm/glm.hpp>
 
 
 using glm::vec3;
@@ -24,8 +24,8 @@ private:
 		float * depthBufferLight;
 		vec3 * colourBuffer;
 		vec3 getPoint(int x, int y, int w, int h);
-		void DrawPolygon(Camera &camera, Lighting &lighting, const Triangle &t);
-		void DrawLighting(Lighting & lighting, const Triangle& t);
+		void DrawPolygon(Camera &camera,Lighting & lighting, const Triangle &t);
+		void FillLightBuffer(Lighting& lighting, const Triangle &t);
 };
 
 

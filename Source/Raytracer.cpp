@@ -187,7 +187,7 @@ void Raytracer::Draw(Camera& camera,Lighting &lighting,vector<Triangle>& triangl
             Intersection inter;
             inter.distance = numeric_limits<float>::max();
             vec3 colour;
-            if (ClosestIntersection(camera.pos, d, triangles, inter, -1))
+            if (ClosestIntersection(vec3(0,0,0), d, triangles, inter, -1))
             {
                 colour = triangles[inter.triangleIndex].color;
                 colour *= 0.75f*(DirectLight(inter, triangles)+indirectLight);
