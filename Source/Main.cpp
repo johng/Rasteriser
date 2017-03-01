@@ -66,7 +66,7 @@ bool ProcessInput(int& t, Camera & camera )
 	Uint8* keystate = SDL_GetKeyState( 0 );
 
 
-	mat4 forward (0,0,0,0 ,0,0,0,0 ,0,0,0,1, 0,0,0,0);
+	mat4 forward (0,0,0,0 ,0,0,0,0 ,0,0,0,-1, 0,0,0,0);
 	mat4 down (0,0,0,0 ,0,0,0,-1 ,0,0,0,0, 0,0,0,0);
 	mat4 right (0,0,0,-1 ,0,0,0,0 ,0,0,0,0, 0,0,0,0);
 
