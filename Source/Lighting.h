@@ -18,12 +18,9 @@ public:
 		mat4 pos;
 		mat4 inv;
 		vec3 colour;
-
 		void move(mat4 m);
-
 		vec4 transform(vec4 t);
-
-		vec4 transformi(vec4 t);
+		vec4 itransform(vec4 t);
 };
 
 

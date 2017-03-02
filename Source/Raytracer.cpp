@@ -182,22 +182,22 @@ void Raytracer::Draw(Camera& camera,Lighting &lighting,vector<Triangle>& triangl
 			vec3 d(x - width / 2.0f, -(y - height / 2.0f), focalLength);
 
 			//d = d*camera.r_y*camera.R_x;
-			d = camera.transform1(d);
+			d = camera.transform(vec4(d,1));
 
-            Intersection inter;
-            inter.distance = numeric_limits<float>::max();
-            vec3 colour;
-            if (ClosestIntersection(vec3(0,0,0), d, triangles, inter, -1))
-            {
-                colour = triangles[inter.triangleIndex].color;
-                colour *= 0.75f*(DirectLight(inter, triangles)+indirectLight);
-            }
-            else
-            { 
-                colour = vec3(0, 0, 0);
-            }
-            //vec3 color( 1.0, 0.0, 0.0 );
-            PutPixelSDL( screen, x, y, colour );
+			Intersection inter;
+			inter.distance = numeric_limits<float>::max();
+			vec3 colour;
+			if (ClosestIntersection(vec3(0,0,0), d, triangles, inter, -1))
+			{
+					colour = triangles[inter.triangleIndex].color;
+					colour *= 0.75f*(DirectLight(inter, triangles)+indirectLight);
+			}
+			else
+			{
+					colour = vec3(0, 0, 0);
+			}
+			//vec3 color( 1.0, 0.0, 0.0 );
+			PutPixelSDL( screen, x, y, colour );
 		}
 	}
 

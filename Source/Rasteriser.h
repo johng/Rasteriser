@@ -22,10 +22,9 @@ private:
 		int height;
 		float * depthBufferCamera;
 		float * depthBufferLight;
-		vec3 * colourBuffer;
 		vec3 getPoint(int x, int y, int w, int h);
-		void DrawPolygon(Camera &camera,Lighting & lighting, const Triangle &t);
-		void FillLightBuffer(Lighting& lighting, const Triangle &t);
+		void DrawPolygon(Camera &camera,Lighting & lighting, const Triangle &t,float * buffer, bool colour);
+		void VertexShader( const vec3& v, vec3& p_raster );
 };
 
 

@@ -2,6 +2,7 @@
 
 Camera::Camera (mat4 pos) : pos(pos)
 {
+	inv = glm::inverse(pos);
  	R_x = mat3();
 	R_y = mat3();
 }
@@ -10,6 +11,7 @@ void Camera::move (mat4 movement)
 {
 	//pos += R_y*R_x*movement;
 	pos += movement;
+	inv = glm::inverse(pos);
 }
 
 void Camera::rotate (float pitch, float yaw)
@@ -29,9 +31,8 @@ vec4 Camera::transform(vec4 p)
 	return p * pos;
 }
 
-vec3 Camera::transform1(vec3 p)
-{
-	//return R_y*R_x*(p - pos);
+vec4 Camera::itransform(vec4 p){
+	return  p * inv;
 }
 
 ostream& operator<<(ostream& os, const Camera& cam)

@@ -15,6 +15,7 @@ class Camera
 {
 public:
     mat4 pos;
+    mat4 inv;
     mat3 R_x, R_y;
 
     Camera (mat4 pos);
@@ -23,7 +24,7 @@ public:
     void rotate (float, float);
 
     vec4 transform(vec4);
-    vec3 transform1(vec3);
+    vec4 itransform(vec4);
     friend ostream& operator<<(ostream& os, const Camera& cam);
 };
 
