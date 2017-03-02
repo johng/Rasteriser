@@ -21,9 +21,9 @@ int main(int argc, char* argv[] )
 								,0,0,1,3
 								,0,0,0,1);
 
-	mat4 lightingPos(1,0,0,1
-									,0,1,0,1
-									,0,0,1,3
+	mat4 lightingPos(1,0,0,0
+									,0,1,0,0
+									,0,0,1,2
 									,0,0,0,1);
 
   vec3 lightColour(10,10,10);
@@ -43,12 +43,12 @@ int main(int argc, char* argv[] )
 
 	//A bit of a hack to flush initial events
 	SDL_Event e;
-	while( SDL_PollEvent(&e) );
+	//while( SDL_PollEvent(&e) );
 
-	while( ProcessInput(t,camera) )
-	{
+	//while( ProcessInput(t,camera) )
+	//{
 		r.Draw(camera,lighting,triangles);
-	}
+	//}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
 	return 0;
 }
