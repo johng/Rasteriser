@@ -11,6 +11,7 @@
 using glm::vec3;
 using glm::vec4;
 using glm::ivec2;
+using glm::vec2;
 
 
 
@@ -33,7 +34,7 @@ private:
 		vec3 getPoint(int x, int y, int w, int h);
 		void DrawPolygon(const Triangle &t, Camera camera, Lighting lighting , float * z_buffer, bool draw_screen);
 		bool Fragment(vec3 bac, vec3 & colour,Camera camera, Lighting lighting);
-		void VertexShader( const vec3& v, vec3& p_raster);
+		void VertexShader( const vec3& v, vec3& p_raster , Lighting lighting);
 };
 
 

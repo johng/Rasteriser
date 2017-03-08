@@ -28,26 +28,32 @@ float edgeFunction(const vec3 &a, const vec3 &b, const vec3 &p)
 { return (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x);}
 
 
-void Rasteriser::VertexShader( const vec3& v, vec3& p_raster ) {
 
-	glm::vec2 p_screen;
-	float nearClippingPlane = height;
-	p_screen.x = nearClippingPlane * v.x / v.z;
-	p_screen.y = nearClippingPlane * v.y / v.z;
+
+void Rasteriser::VertexShader( const vec3& v, vec3& p_raster , Lighting lighting) {
+
+
+	vec3 p_camera = lighting.transform(vec4(v,1));
+	vec2 p_screen;
+	float nearClippingPlane = height ;
+	p_screen.x = nearClippingPlane * p_camera.x / p_camera.z;
+	p_screen.y = nearClippingPlane * p_camera.y / p_camera.z;
 
 	float l = -width / 2;
 	float r = width / 2;
 	float t = height / 2;
 	float b = -height / 2;
 
-	glm::vec2 p_ndc;
+	vec2 p_ndc;
 	p_ndc.x = 2 * p_screen.x / (r - l) - (r + l) / (r - l);
 	p_ndc.y = 2 * p_screen.y / (t - b) - (t + b) / (t - b);
 
+
 	p_raster.x = (p_ndc.x + 1) / 2 * width;
 	p_raster.y = (1-p_ndc.y) / 2 * height;
+	p_raster.z = p_camera.z;
 
-	p_raster.z = v.z;
+
 }
 
 bool Rasteriser::Fragment(vec3 bac, vec3 & colour,Camera camera, Lighting lighting){
@@ -90,6 +96,12 @@ bool Rasteriser::Fragment(vec3 bac, vec3 & colour,Camera camera, Lighting lighti
 
 
 }
+
+float lamdaCalc(const ivec2 &b, const ivec2 &a, const ivec2 &p)
+{
+	return (p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x);
+}
+
 
 void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting , float * z_buffer, bool draw_screen) {
 
@@ -144,50 +156,80 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
 
         if (z_buffer[C(x, y, width, height)] > W) {
 
-          if(draw_screen){
+          if(draw_screen) {
 
-            vec3 v0_dash_light = lighting.transform(vec4(t.v0,1));
-            vec3 v1_dash_light = lighting.transform(vec4(t.v1,1));
-            vec3 v2_dash_light = lighting.transform(vec4(t.v2,1));
+						vec3 v0_dash_light = lighting.transform(vec4(t.v0, 1));
+						vec3 v1_dash_light = lighting.transform(vec4(t.v1, 1));
+						vec3 v2_dash_light = lighting.transform(vec4(t.v2, 1));
 
-            mat3 M(v0_dash_light,v1_dash_light, v2_dash_light);
+						mat3 M(v0_dash_light, v1_dash_light, v2_dash_light);
 
-            vec4 bac_proj(E * M ,1);
+						vec4 bac_proj(E * M, 1);
+						//cout << E.x + E.y + E.z << "\n";
+
+						//cout << bac_proj[0] << "," << bac_proj[1] << "," <<bac_proj[2] << "," << "\n";
+						//cout << v0_dash_light[0] << "," << v0_dash_light[1] << "," <<v0_dash_light[2] << "," << "\n";
+
+						vec4 coord = bac_proj * lighting.pos;
+						//cout << coord.x * width << "," << coord.y * height << "," << coord.z << "," << coord.w << "\n";
+
+						vector<vec3> vertexPixels(3);
+
+						VertexShader(t.v0, vertexPixels[0], lighting);
+						VertexShader(t.v1, vertexPixels[1], lighting);
+						VertexShader(t.v2, vertexPixels[2], lighting);
+						//cout << vertexPixels[0].x << "," << vertexPixels[0].y << "," << vertexPixels[0].z << "," << "\n";
+						//cout << vertexPixels[1].x << "," << vertexPixels[1].y << "," << vertexPixels[1].z << "," << "\n";
+
+						//cout << xxx << "," << yyy << "\n";
+						//cout << depthBufferLight[C(xxx,yyy,width,height)] << "\n";
+
+						vec3 V0 = vertexPixels[0];
+						vec3 V1 = vertexPixels[1];
+						vec3 V2 = vertexPixels[2];
 
 
-            //cout << E.x + E.y + E.z << "\n";
+						vec2 p(x, y);
 
-            //cout << bac_proj[0] << "," << bac_proj[1] << "," <<bac_proj[2] << "," << "\n";
-            //cout << v0_dash_light[0] << "," << v0_dash_light[1] << "," <<v0_dash_light[2] << "," << "\n";
+						float lamda0 = lamdaCalc(V1, V2, p);
+						float lamda1 = lamdaCalc(V2, V0, p);
+						float lamda2 = lamdaCalc(V0, V1, p);
 
-            vec4 coord = bac_proj * lighting.pos;
+						float totalArea = lamdaCalc(V0, V1, V2);
 
+						lamda0 /= totalArea;
+						lamda1 /= totalArea;
+						lamda2 /= totalArea;
 
-            //cout << coord.x * width << "," << coord.y * height << "," << coord.z << "," << coord.w << "\n";
+						//cout << lamda0 << "," << lamda1 << "," << lamda2 <<"," << lamda0 + lamda1 + lamda2 <<  "|" << E.x << "," << E.y << "," << E.z << "\n";
 
-            int xx =  (int)coord[0]/ (float)coord[2];
-            int yy = (int)coord[1]/ (float)coord[2];
+						int xxx = (int) vertexPixels[0].x * lamda0 + vertexPixels[1].x * lamda1 + vertexPixels[2].x * lamda2;
+						int yyy = (int) vertexPixels[0].y * lamda0 + vertexPixels[1].y * lamda1 + vertexPixels[2].y * lamda2;
 
-            vec3 colour(0,0,0);
+						if (xxx >= 0 && xxx < width && yyy >= 0 && yyy < height) {
 
-            //cout << xx << "," << yy << "\n";
-            if(xx >= 0 && xx < width && yy >= 0 && yy < height) {
+							float z = 1 / (1 / V0.z * lamda0 + 1 / V1.z * lamda1 + 1 / V2.z * lamda2);
 
-              float shadow = depthBufferLight[C(xx, yy, width, height)];
+							float diff =  z - depthBufferLight[C(xxx, yyy, width, height)];
 
-              //cout << shadow << "\n";
+							if( diff >= 1) {
+								cout <<   xxx <<  "," << yyy << "| " << depthBufferLight[C(xxx, yyy, width, height)] << "|" << z << "\n";
+								PutPixelSDL( screen, x, y, vec3(0,0,0) );
+							}else{
+								PutPixelSDL( screen, x, y, colour );
+							}
 
-              if(shadow >= coord[2]){
-                colour = t.color;
-              }
-            }
-
+						}else{
+							PutPixelSDL( screen, x, y, vec3(0,0,0) );
+						}
             mat3 M_i = glm::inverse(M);
 
             vec3 w = vec3(1, 1, 1) * M_i;
 
-            PutPixelSDL( screen, x, y, colour );
-            z_buffer[C(x, y, width, height)] = W;
+
+						z_buffer[C(x, y, width, height)] = W;
+
+
 
               /*
               Vec4f sb_p = uniform_Mshadow*embed<4>(varying_tri*bar); // corresponding point in the shadow buffer
@@ -210,10 +252,6 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
 
             z_buffer[C(x, y, width, height)] = W;
 
-            if(y == 416)
-              cout << "Light:" << x << "," << y << "| " << W <<  "\n" ;
-
-
           }
         }
       }
@@ -235,12 +273,12 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
 		depthBufferLight[i] = INFINITY;
 	}
 
-	for( int i=0; i<1; ++i )
+	for( int i=0; i<triangles.size() ; ++i )
 	{
     DrawPolygon( triangles[i], camera,lighting , depthBufferLight , false );
 	}
 
-	for(int i = 0 ; i < 1; i++){
+	for(int i = 0 ; i <triangles.size(); i++){
 
     DrawPolygon( triangles[i], camera,lighting , depthBufferCamera , true );
 	}
