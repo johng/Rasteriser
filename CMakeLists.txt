@@ -13,6 +13,6 @@ set(SOURCE_FILES
     Source/SDLauxiliary.h
         Source/Rasteriser.cpp
     Source/TestModel.h
-    Makefile Source/Light.h Source/Renderer.h Source/Rasteriser.h Source/main.cpp Source/TestModel.cpp Source/Camera.cpp Source/SDLauxiliary.cpp Source/Lighting.cpp Source/Lighting.h)
+    Makefile Source/Light.h Source/Renderer.h Source/Rasteriser.h Source/main.cpp Source/TestModel.cpp Source/Camera.cpp Source/SDLauxiliary.cpp Source/Lighting.cpp Source/Lighting.h Source/Shader.h)
 
 add_executable(Computer_Graphics ${SOURCE_FILES})
