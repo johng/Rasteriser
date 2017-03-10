@@ -16,13 +16,13 @@ int main(int argc, char* argv[] )
 {
 	vector<Triangle> triangles;
 
-	mat4 cameraPos(1,0,0,0.5
+	mat4 cameraPos(1,0,0,0
 								,0,1,0,0
 								,0,0,1,3
 								,0,0,0,1);
 
-	mat4 lightingPos(1,0,0,0
-									,0,1,0,0
+	mat4 lightingPos(1,0,0,0.1
+									,0,1,0,0.2
 									,0,0,1,3
 									,0,0,0,1);
 

@@ -22,6 +22,7 @@ Rasteriser::Rasteriser(SDL_Surface *screen) : Renderer(screen) {
 	this->height = screen->w;
 	this->depthBufferCamera = (float*)malloc(sizeof(float)*height*width);
 	this->depthBufferLight = (float*)malloc(sizeof(float)*height*width);
+	this->depth = 2000;
 }
 
 float edgeFunction(const vec3 &a, const vec3 &b, const vec3 &p)
@@ -93,8 +94,6 @@ bool Rasteriser::Fragment(vec3 bac, vec3 & colour,Camera camera, Lighting lighti
 
 
 
-
-
 }
 
 float lamdaCalc(const ivec2 &b, const ivec2 &a, const ivec2 &p)
@@ -103,6 +102,38 @@ float lamdaCalc(const ivec2 &b, const ivec2 &a, const ivec2 &p)
 }
 
 
+void Rasteriser::LookAt(vec3 eye, vec3 center, vec3 up){
+
+	glm::vec3 z =  normalize(eye - center);
+	vec3 x = normalize(cross(up,z));
+	vec3 y = normalize(cross(z,x));
+	mat4 matv = mat4();
+	mat4 tr = mat4();
+	for (int i=0; i<3; i++) {
+		matv[0][i] = x[i];
+		matv[1][i] = y[i];
+		matv[2][i] = z[i];
+		tr[i][3] = -center[i];
+	}
+	modelView = matv * tr;
+}
+
+
+void Rasteriser::Projection(float c){
+	projection[3][2] = c;
+}
+
+void Rasteriser::ViewPort(int x, int y, int w, int h){
+
+	viewPort[0][3] = x+w/2.f;
+	viewPort[1][3] = y+h/2.f;
+	viewPort[2][3] = depth/2.f;
+
+	viewPort[0][0] = w/2.f;
+	viewPort[1][1] = h/2.f;
+	viewPort[2][2] = depth/2.f;
+}
+
 void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting , float * z_buffer, bool draw_screen) {
 
   //Transform to camera coordinates
@@ -110,6 +141,7 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
   vec3	v0_dash = t.v0;
   vec3	v1_dash = t.v1;
   vec3	v2_dash = t.v2;
+
 
   if(draw_screen){
 
@@ -158,20 +190,11 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
 
           if(draw_screen) {
 
-						vec3 v0_dash_light = lighting.transform(vec4(t.v0, 1));
-						vec3 v1_dash_light = lighting.transform(vec4(t.v1, 1));
-						vec3 v2_dash_light = lighting.transform(vec4(t.v2, 1));
 
-						mat3 M(v0_dash_light, v1_dash_light, v2_dash_light);
 
-						vec4 bac_proj(E * M, 1);
-						//cout << E.x + E.y + E.z << "\n";
 
-						//cout << bac_proj[0] << "," << bac_proj[1] << "," <<bac_proj[2] << "," << "\n";
-						//cout << v0_dash_light[0] << "," << v0_dash_light[1] << "," <<v0_dash_light[2] << "," << "\n";
 
-						vec4 coord = bac_proj * lighting.pos;
-						//cout << coord.x * width << "," << coord.y * height << "," << coord.z << "," << coord.w << "\n";
+						continue;
 
 						vector<vec3> vertexPixels(3);
 
@@ -203,49 +226,46 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
 
 						//cout << lamda0 << "," << lamda1 << "," << lamda2 <<"," << lamda0 + lamda1 + lamda2 <<  "|" << E.x << "," << E.y << "," << E.z << "\n";
 
-						int xxx = (int) vertexPixels[0].x * lamda0 + vertexPixels[1].x * lamda1 + vertexPixels[2].x * lamda2;
-						int yyy = (int) vertexPixels[0].y * lamda0 + vertexPixels[1].y * lamda1 + vertexPixels[2].y * lamda2;
+						float xx =  vertexPixels[0].x * lamda0 + vertexPixels[1].x * lamda1 + vertexPixels[2].x * lamda2;
+						float yy =  vertexPixels[0].y * lamda0 + vertexPixels[1].y * lamda1 + vertexPixels[2].y * lamda2;
+						float zz =  vertexPixels[0].z * lamda0 + vertexPixels[1].z * lamda1 + vertexPixels[2].z * lamda2;
+
+						vec4 screen_coord (xx,yy,zz,1);
+
+						vec3 light_space = lighting.transform(camera.itransform(screen_coord));
+
+
+						int xxx = light_space.x/light_space.z;
+						int yyy = light_space.y/light_space.z;
+
+						//cout << xxx << "," << yyy << "\n";
 
 						if (xxx >= 0 && xxx < width && yyy >= 0 && yyy < height) {
 
-							float z = 1 / (1 / V0.z * lamda0 + 1 / V1.z * lamda1 + 1 / V2.z * lamda2);
+							//float z = 1 / (1 / V0.z * lamda0 + 1 / V1.z * lamda1 + 1 / V2.z * lamda2);
 
-							float diff =  z - depthBufferLight[C(xxx, yyy, width, height)];
+							float diff =  light_space.z - depthBufferLight[C(xxx, yyy, width, height)];
 
-							if( diff >= 1) {
-								cout <<   xxx <<  "," << yyy << "| " << depthBufferLight[C(xxx, yyy, width, height)] << "|" << z << "\n";
+							if( diff > 0.3) {
+
+								//cout <<   xxx <<  "," << yyy << "| " << depthBufferLight[C(xxx, yyy, width, height)] << "|" << zz << "\n";
 								PutPixelSDL( screen, x, y, vec3(0,0,0) );
+
 							}else{
+
 								PutPixelSDL( screen, x, y, colour );
 							}
 
 						}else{
-							PutPixelSDL( screen, x, y, vec3(0,0,0) );
+							PutPixelSDL( screen, x, y, colour );
 						}
+
+
             mat3 M_i = glm::inverse(M);
 
             vec3 w = vec3(1, 1, 1) * M_i;
 
-
 						z_buffer[C(x, y, width, height)] = W;
-
-
-
-              /*
-              Vec4f sb_p = uniform_Mshadow*embed<4>(varying_tri*bar); // corresponding point in the shadow buffer
-              sb_p = sb_p/sb_p[3];
-              int idx = int(sb_p[0]) + int(sb_p[1])*width; // index in the shadowbuffer array
-              float shadow = .3+.7*(shadowbuffer[idx]<sb_p[2]);
-              Vec2f uv = varying_uv*bar;                 // interpolate uv for the current pixel
-              Vec3f n = proj<3>(uniform_MIT*embed<4>(model->normal(uv))).normalize(); // normal
-              Vec3f l = proj<3>(uniform_M  *embed<4>(light_dir        )).normalize(); // light vector
-              Vec3f r = (n*(n*l*2.f) - l).normalize();   // reflected light
-              float spec = pow(std::max(r.z, 0.0f), model->specular(uv));
-              float diff = std::max(0.f, n*l);
-              TGAColor c = model->diffuse(uv);
-              for (int i=0; i<3; i++) color[i] = std::min<float>(20 + c[i]*shadow*(1.2*diff + .6*spec), 255);
-              return false;
-              */
 
 
           }else{
