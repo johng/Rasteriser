@@ -38,10 +38,10 @@ private:
 		float * depthBufferLight;
 		vec3 getPoint(int x, int y, int w, int h);
 		void DrawPolygon(const Triangle &t, Camera camera, Lighting lighting , float * z_buffer, bool draw_screen);
-		bool Fragment(vec3 bac, vec3 & colour,Camera camera, Lighting lighting);
-		void VertexShader( const vec3& v, vec3& p_raster , Lighting lighting);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
 		void ViewPort(int x, int y, int w, int h);
+    void Projection(float c);
+    vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P);
 };
 
 
