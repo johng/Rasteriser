@@ -41,7 +41,7 @@ vec4 Rasteriser::Shadow::proj(vec4 vertex, int index) {
 bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   vec4 p =   vec4(bar*tri,1) * screen_shadow ;
   p = p/p.w;
-  int idx =  int(p[0]) + int(p[1])*500;
+  int idx =  int(p[0]) + int(p[1])*r->width;
   //cout << p[0] << "," << p[1] << r->width << "\n";
   //cout << idx << "\n";
 
@@ -137,8 +137,7 @@ void Rasteriser::DrawPolygon(const Triangle &t, Shader& shader ,Camera camera, L
       }
     }
   }
-
-   */
+  */
 }
 
 void Rasteriser::Projection(float coeff) {
@@ -190,7 +189,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
   vec3 center(0,0,0);
   vec3 up(0,1,0);
   vec3 light(0,0,-5);
-  vec3 eye(-1,-1,-4);
+  vec3 eye(-0.8,-0.8,-4);
 
   ViewPort(width/8, height/8, width*3/4, height*3/4);
 
