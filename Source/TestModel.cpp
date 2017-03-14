@@ -157,9 +157,9 @@ void LoadTestModel( std::vector<Triangle>& triangles )
 		triangles[i].v1.x *= 1;
 		triangles[i].v2.x *= 1;
 
-		triangles[i].v0.y *= 1;
-		triangles[i].v1.y *= 1;
-		triangles[i].v2.y *= 1;
+		triangles[i].v0.y *= -1;
+		triangles[i].v1.y *= -1;
+		triangles[i].v2.y *= -1;
 
 		triangles[i].ComputeNormal();
 	}

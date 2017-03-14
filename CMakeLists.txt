@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.6)
 project(Computer_Graphics)
 
 
-
-
 find_package(SDL)
 
 

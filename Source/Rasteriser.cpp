@@ -17,10 +17,10 @@ vec3 Rasteriser::getPoint(int x, int y, int w, int h)
 
 
 Rasteriser::Rasteriser(SDL_Surface *screen) : Renderer(screen) {
-  this->depth =4;
+  this->depth = 2000.f;
 	this->screen = screen;
 	this->width = screen->w;
-	this->height = screen->w;
+	this->height = screen->h;
 	this->depthBufferCamera = (float*)malloc(sizeof(float)*height*width);
 	this->depthBufferLight = (float*)malloc(sizeof(float)*height*width);
 }
@@ -62,11 +62,19 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
   //viewPort = transpose(viewPort);
 
   mat4 M = viewPort*projection*modelView;
+  //mat4 tt = transpose(transpose(viewPort)* transpose(projection));
+  mat4 tt = projection * viewPort;
 
-  M = transpose(M);
-  vec4 vv0_dash = M*(vec4(t.v0,1));
-  vec4 vv1_dash = M*(vec4(t.v1,1));
-  vec4 vv2_dash = M*(vec4(t.v2,1));
+  mat4 MM =  modelView * tt;
+
+  //vec4 vv0_dash = MM*(vec4(t.v0,1));
+  //vec4 vv1_dash = MM*(vec4(t.v1,1));
+  //vec4 vv2_dash = MM*(vec4(t.v2,1));
+
+
+  vec4 vv0_dash = (vec4(t.v0,1))*MM;
+  vec4 vv1_dash = (vec4(t.v1,1))*MM;
+  vec4 vv2_dash = (vec4(t.v2,1))*MM;
 
 
   cout << t.v0.x << "," << t.v0.y << "," << t.v0.z << "\n";
@@ -136,7 +144,7 @@ void Rasteriser::Projection(float coeff) {
 
 void Rasteriser::LookAt(vec3 eye, vec3 center, vec3 up){
 
-  vec3 z =  normalize(eye - center);
+  vec3 z = normalize(eye - center);
   vec3 x = normalize(cross(up,z));
   vec3 y = normalize(cross(z,x));
 
@@ -178,7 +186,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
   vec3 center(0,0,0);
   vec3 up(0,1,0);
 
-  vec3 eye(0,0.5,4);
+  vec3 eye(0,0,-4);
   LookAt(eye, center, up);
   ViewPort(width/8, height/8, width*3/4, height*3/4);
   float c = length(eye-center);
@@ -187,7 +195,6 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
 
 
 	for(int i = 0 ; i <triangles.size(); i++){
-
     DrawPolygon( triangles[i], camera,lighting , depthBufferCamera , true );
 	}
 
