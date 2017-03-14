@@ -2,7 +2,7 @@
 #include "TestModel.h"
 #include "Lighting.h"
 
-bool ProcessInput(int& t, Camera & camera, bool debug);
+bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug );
 using namespace std;
 using glm::vec3;
 
@@ -32,23 +32,11 @@ int main(int argc, char* argv[] )
 
 	vector<Triangle> triangles;
 
-	vec3 camPos (-0.5,-0.5,-3);
-	mat4 lightingPos(1,0,0,0.1
-									,0,1,0,0.2
-									,0,0,1,3
-									,0,0,0,1);
-
-  vec3 lightColour(10,10,10);
-	Camera camera(camPos);
-	Lighting lighting(lightingPos, lightColour);
+	Camera camera(vec3(-0.5,-0.5,-3));
+	Lighting lighting(vec3(0,0,-5), vec3(1,1,1));
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
-
-
-
-
-
 
 	LoadTestModel( triangles );
 
@@ -63,7 +51,7 @@ int main(int argc, char* argv[] )
 
 	if(show_screen) {
 		while (NoQuitMessageSDL()) {
-			ProcessInput(t, camera , debug);
+			ProcessInput(t, camera, lighting , debug);
 			r.Draw(camera, lighting, triangles);
 		}
 	}else{
@@ -75,7 +63,7 @@ int main(int argc, char* argv[] )
 }
 
 
-bool ProcessInput(int& t, Camera & camera , bool debug )
+bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 {
 	// Compute frame time:
 	int t2 = SDL_GetTicks();
@@ -86,6 +74,7 @@ bool ProcessInput(int& t, Camera & camera , bool debug )
 	if(debug) {
 		cout << "Render time: " << dt << " ms." << endl;
 		cout << "Camera pos: " << camera << endl;
+		cout << "Lighting pos: " << lighting << endl;
 	}
 	Uint8* keystate = SDL_GetKeyState( 0 );
 
@@ -122,6 +111,29 @@ bool ProcessInput(int& t, Camera & camera , bool debug )
 	{
 		// Move camera to the right
 		camera.move(-right);
+	}
+
+
+
+	if( keystate[SDLK_UP] )
+	{
+		// Move camera forward
+		lighting.move(-down);
+	}
+	if( keystate[SDLK_DOWN] )
+	{
+		// Move camera backward
+		lighting.move(down);
+	}
+	if( keystate[SDLK_RIGHT] )
+	{
+		// Move camera to the left
+		lighting.move(right);
+	}
+	if( keystate[SDLK_LEFT] )
+	{
+		// Move camera to the right
+		lighting.move(-right);
 	}
 
 	if( keystate[SDLK_ESCAPE] )

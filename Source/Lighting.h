@@ -4,7 +4,7 @@
 
 #ifndef COMPUTER_GRAPHICS_LIGHTING_H
 #define COMPUTER_GRAPHICS_LIGHTING_H
-
+#include <iostream>
 #include <glm/glm.hpp>
 using namespace std;
 using glm::vec3;
@@ -12,15 +12,16 @@ using glm::vec4;
 using glm::mat4;
 class Lighting {
 
-public:
-		Lighting(mat4 pos, vec3 colour);
 
-		mat4 pos;
-		mat4 inv;
-		vec3 colour;
-		void move(mat4 m);
-		vec4 transform(vec4 t);
-		vec4 itransform(vec4 t);
+private:
+		vec3 pos;
+		vec3 col;
+public:
+		Lighting(vec3 pos, vec3 col);
+		void move(vec3 m);
+		vec3 position();
+		vec3 colour();
+		friend ostream& operator<<(ostream& os, const Lighting& light);
 };
 
 

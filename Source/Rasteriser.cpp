@@ -197,7 +197,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
 
   vec3 center(0,0,0);
   vec3 up(0,1,0);
-  vec3 light(0,0,-5);
+  vec3 light = lighting.position();
   vec3 eye = camera.position();
 
   ViewPort(width/8, height/8, width*3/4, height*3/4);
