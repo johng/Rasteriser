@@ -50,8 +50,9 @@ private:
 				Rasteriser * r;
 				mat4 screen_shadow;
 				mat3 tri;
+				vec3
 				Shadow(Rasteriser * rr, mat4 sc) : tri(0), r(rr) , screen_shadow(sc) {};
-				vec4 proj(vec4 vertex, int j);
+				vec4 proj(int triangle_index, int vertex_index);
 				bool fragment(vec3 bar, vec3 & colour);
 		};
 

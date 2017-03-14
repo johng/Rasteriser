@@ -32,6 +32,7 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 
 
 vec4 Rasteriser::Shadow::proj(vec4 vertex, int index) {
+
   vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
     tri[i][index] = retval[i]/retval.w;
@@ -51,9 +52,12 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
     float shadow = .3 + .7 * (r->depthBufferLight[idx] < p[2] + 44);
 
 
-    colour = vec3(1, 1, 1) * std::min<float>(shadow, 1);
+    colour = vec3(1, 1, 1) * std::min<float>(shadow, 1) * ;
 
   }else{
+
+    cout << "OOB" << "\n";
+
     colour = vec3(0,0,0);
   }
 

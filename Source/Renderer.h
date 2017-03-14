@@ -15,7 +15,7 @@ public:
 
 		struct Shader {
 				virtual ~Shader();
-				virtual vec4 proj(vec4 vertex, int j) = 0;
+				virtual vec4 proj(int triangle_index, int vertex_index) = 0;
 				virtual bool fragment(vec3 bar, vec3 & colour) =0;
 		};
 
