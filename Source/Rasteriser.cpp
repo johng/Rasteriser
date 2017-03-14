@@ -16,6 +16,13 @@ vec3 Rasteriser::getPoint(int x, int y, int w, int h)
 }
 
 
+
+class Shader {
+
+
+
+};
+
 Rasteriser::Rasteriser(SDL_Surface *screen) : Renderer(screen) {
   this->depth = 2000.f;
 	this->screen = screen;
@@ -49,38 +56,11 @@ void Rasteriser::DrawPolygon(const Triangle &t, Camera camera, Lighting lighting
 
 
 
+  mat4 M = modelView*projection*viewPort;
 
-  //vec4 v0_dash = viewPort*projection*modelView*(vec4(t.v0,1));
-  //vec4 v1_dash = viewPort*projection*modelView*(vec4(t.v1,1));
-  //vec4 v2_dash = viewPort*projection*modelView*(vec4(t.v2,1));
-
-
-  vec4 v0_dash = projection*modelView*(vec4(t.v0,1));
-  vec4 v1_dash = projection*modelView*(vec4(t.v1,1));
-  vec4 v2_dash = projection*modelView*(vec4(t.v2,1));
-
-  //viewPort = transpose(viewPort);
-
-  mat4 M = viewPort*projection*modelView;
-  //mat4 tt = transpose(transpose(viewPort)* transpose(projection));
-  mat4 tt = projection * viewPort;
-
-  mat4 MM =  modelView * tt;
-
-  //vec4 vv0_dash = MM*(vec4(t.v0,1));
-  //vec4 vv1_dash = MM*(vec4(t.v1,1));
-  //vec4 vv2_dash = MM*(vec4(t.v2,1));
-
-
-  vec4 vv0_dash = (vec4(t.v0,1))*MM;
-  vec4 vv1_dash = (vec4(t.v1,1))*MM;
-  vec4 vv2_dash = (vec4(t.v2,1))*MM;
-
-
-  cout << t.v0.x << "," << t.v0.y << "," << t.v0.z << "\n";
-  cout << vv0_dash.x << "," << vv0_dash.y << "," << vv0_dash.z << "\n";
-  //cout << vv.x << "," << vv.y << "," << vv.z << "\n";
-
+  vec4 vv0_dash = (vec4(t.v0,1))*M;
+  vec4 vv1_dash = (vec4(t.v1,1))*M;
+  vec4 vv2_dash = (vec4(t.v2,1))*M;
 
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
