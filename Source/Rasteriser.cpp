@@ -27,6 +27,7 @@ vec4 Rasteriser::DepthShader::proj(vec4 vertex, int index) {
 bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
   vec3 p = bar*tri;
   colour = vec3(1, 1, 1)*(p.z/depth);
+  return true;
 }
 
 
@@ -45,12 +46,20 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   //cout << p[0] << "," << p[1] << r->width << "\n";
   //cout << idx << "\n";
 
-  float shadow = .3+.7*(r->depthBufferLight[idx]<p[2] + 44);
+  if(idx >= 0 && idx < r->width*r->height) {
+
+    float shadow = .3 + .7 * (r->depthBufferLight[idx] < p[2] + 44);
 
 
-  colour = vec3(1,1,1) * std::min<float>(shadow, 1);
+    colour = vec3(1, 1, 1) * std::min<float>(shadow, 1);
+
+  }else{
+    colour = vec3(0,0,0);
+  }
 
 
+
+  return true;
 }
 
 
@@ -175,11 +184,11 @@ void Rasteriser::ViewPort(int x, int y, int w, int h){
 void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triangles)
 {
 
-	SDL_FillRect( screen, 0, 0 );
+  SDL_FillRect( screen, 0, 0 );
 
-	if( SDL_MUSTLOCK(screen) ) {
-		SDL_LockSurface(screen);
-	}
+  if( SDL_MUSTLOCK(screen) ) {
+    SDL_LockSurface(screen);
+  }
 
 	for(int i = 0 ; i < height * width ; i ++){
 		depthBufferCamera[i] = -INFINITY;
@@ -189,7 +198,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
   vec3 center(0,0,0);
   vec3 up(0,1,0);
   vec3 light(0,0,-5);
-  vec3 eye(-0.8,-0.8,-4);
+  vec3 eye = camera.position();
 
   ViewPort(width/8, height/8, width*3/4, height*3/4);
 
@@ -205,6 +214,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triang
 	for(int i = 0 ; i <triangles.size(); i++){
     DrawPolygon( triangles[i], depthShader , camera,lighting , depthBufferLight , false );
 	}
+
 
   LookAt(eye, center, up);
   Projection(-1.f/ length(eye-center));

@@ -1,17 +1,15 @@
 #include "Camera.h"
 
-Camera::Camera (mat4 pos) : pos(pos)
+Camera::Camera (vec3 pos) : pos(pos)
 {
-	inv = glm::inverse(pos);
- 	R_x = mat3();
-	R_y = mat3();
+
 }
 
-void Camera::move (mat4 movement)
+void Camera::move (vec3 movement)
 {
 	//pos += R_y*R_x*movement;
 	pos += movement;
-	inv = glm::inverse(pos);
+	//inv = glm::inverse(pos);
 }
 
 void Camera::rotate (float pitch, float yaw)
@@ -25,18 +23,15 @@ void Camera::rotate (float pitch, float yaw)
 							sin(yaw), 0, cos(yaw)); // 3. column
 }
 
-vec4 Camera::transform(vec4 p)
+vec3 Camera::position()
 {
-	vec4 v =  pos * p;
-	return p * pos;
+	return pos;
 }
 
-vec4 Camera::itransform(vec4 p){
-	return  p * inv;
-}
+
 
 ostream& operator<<(ostream& os, const Camera& cam)
 {
-	os << "(" << cam.pos[1][3] << ")";
+	os << "(" << cam.pos.x << "," << cam.pos.y << "," << cam.pos.z << ")";
 	return os;
 }

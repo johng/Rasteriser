@@ -13,21 +13,21 @@ using glm::vec4;
 
 class Camera
 {
+
+private:
+		vec3 pos;
+
 public:
-    mat4 pos;
-    mat4 inv;
+
     mat3 R_x, R_y;
 
-    Camera (mat4 pos);
+    Camera (vec3 pos);
 
-    void move (mat4 move);
+    void move (vec3 move);
     void rotate (float, float);
-
-    vec4 transform(vec4);
-    vec4 itransform(vec4);
+    vec3 position();
     friend ostream& operator<<(ostream& os, const Camera& cam);
 };
-
 
 
 
