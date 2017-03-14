@@ -3,3 +3,4 @@ Build
 *.bmp
 .idea/
 cmake-build-debug/
+Main
