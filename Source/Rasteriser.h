@@ -25,14 +25,13 @@ public:
 
 protected:
 
-		int width;
-		int height;
+
+
+private:
 
 		float * depthBufferCamera;
 		float * depthBufferLight;
 
-private:
-		SDL_Surface* screen;
 		vec3 getPoint(int x, int y, int w, int h);
 		void DrawPolygon(const Triangle &t, Shader& shader, Camera camera, Lighting lighting , float * z_buffer, bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
@@ -40,8 +39,18 @@ private:
     void Projection(float c);
     vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P);
 		struct DepthShader: Shader {
+				Rasteriser *r;
 				mat3 tri;
-				DepthShader() : tri(0) {}
+				DepthShader(Rasteriser *rr) : tri(0), r(rr) {}
+				vec4 proj(vec4 vertex, int j);
+				bool fragment(vec3 bar, vec3 & colour);
+		};
+
+		struct Shadow: Shader {
+				Rasteriser * r;
+				mat4 screen_shadow;
+				mat3 tri;
+				Shadow(Rasteriser * rr, mat4 sc) : tri(0), r(rr) , screen_shadow(sc) {};
 				vec4 proj(vec4 vertex, int j);
 				bool fragment(vec3 bar, vec3 & colour);
 		};

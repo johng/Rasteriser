@@ -13,11 +13,6 @@ class Renderer {
 
 public:
 
-		static mat4 modelView;
-		static mat4 viewPort;
-		static mat4 projection;
-		static float depth;
-
 		struct Shader {
 				virtual ~Shader();
 				virtual vec4 proj(vec4 vertex, int j) = 0;
@@ -29,9 +24,12 @@ public:
 
 protected:
     SDL_Surface * screen;
-    int width;
-    int height;
-
+		static mat4 modelView;
+		static mat4 viewPort;
+		static mat4 projection;
+		static float depth;
+		int width;
+		int height;
 
 };
 
