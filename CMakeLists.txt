@@ -17,10 +17,14 @@ link_libraries(${SDL_LIBRARY})
 INCLUDE_DIRECTORIES($(S_DIR)/SDLauxiliary.h)
 INCLUDE_DIRECTORIES($(S_DIR)/TestModel.h)
 
-file(GLOB helloworld_SRC
+file(GLOB SRC
         "Source/*.h"
         "Source/*.cpp"
         )
 
-add_executable(Main ${helloworld_SRC})
+add_executable(Main ${SRC})
+
+set(EXECUTABLE_OUTPUT_PATH "..")
+
+
 
