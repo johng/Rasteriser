@@ -20,12 +20,12 @@ int main(int argc, char* argv[] )
 		char * arg = argv[i] ;
 		if(strcmp(arg,"-debug") == 0){
 			debug = true;
-			cout << "Debugging enabled";
+			cout << "Debugging enabled\n";
 		}
 
 		if(strcmp(arg,"-dev") == 0){
 			show_screen = false;
-			cout << "Dev mode";
+			cout << "Dev mode\n";
 		}
 
 	}
