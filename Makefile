@@ -15,7 +15,7 @@ LINKER   = g++ -o
 LFLAGS   = -Wall
 
 # change these to proper directories where each file should be
-BINDIR   = Build
+BINDIR   = .
 SRCDIR   = Source
 OBJDIR   = Objects
 
@@ -36,8 +36,9 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.cpp
 
 .PHONY: clean
 clean:
-	$(rm) $(OBJECTS)
+	$(rm) $(OBJECTS) Main
 	@echo "Cleanup complete!"
+
 
 .PHONY: remove
 remove: clean
