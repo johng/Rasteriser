@@ -2,7 +2,7 @@
 #include "TestModel.h"
 #include "Lighting.h"
 
-bool ProcessInput(int& t, Camera & camera);
+bool ProcessInput(int& t, Camera & camera, bool debug);
 using namespace std;
 using glm::vec3;
 
@@ -13,6 +13,23 @@ const int SCREEN_HEIGHT = 500;
 
 int main(int argc, char* argv[] )
 {
+
+	bool debug = false;
+	bool show_screen = true;
+	for(int i = 1 ; i < argc; i++){
+		char * arg = argv[i] ;
+		if(strcmp(arg,"-debug") == 0){
+			debug = true;
+			cout << "Debugging enabled";
+		}
+
+		if(strcmp(arg,"-dev") == 0){
+			show_screen = false;
+			cout << "Dev mode";
+		}
+
+	}
+
 	vector<Triangle> triangles;
 
 	vec3 camPos (-0.5,-0.5,-3);
@@ -28,6 +45,11 @@ int main(int argc, char* argv[] )
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
 
+
+
+
+
+
 	LoadTestModel( triangles );
 
 	//SDL_WM_GrabInput( SDL_GRAB_ON );
@@ -38,33 +60,44 @@ int main(int argc, char* argv[] )
 	//A bit of a hack to flush initial events
 	SDL_Event e;
 	//while( SDL_PollEvent(&e) );
-	int i = 0;
-	//while(i++ < 2 )
-	while( NoQuitMessageSDL() )
-	{
-		r.Draw(camera,lighting,triangles);
-		ProcessInput(t,camera);
+
+	if(show_screen) {
+		while (NoQuitMessageSDL()) {
+			ProcessInput(t, camera , debug);
+			r.Draw(camera, lighting, triangles);
+		}
+	}else{
+
+		r.Draw(camera, lighting, triangles);
 	}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
 	return 0;
 }
 
 
-bool ProcessInput(int& t, Camera & camera )
+bool ProcessInput(int& t, Camera & camera , bool debug )
 {
 	// Compute frame time:
 	int t2 = SDL_GetTicks();
 	float dt = float(t2-t);
 	t = t2;
 	float sf = 0.002f;
-	cout << "Render time: " << dt << " ms." << endl;
-	cout << "Camera pos: " << camera << endl;
+
+	if(debug) {
+		cout << "Render time: " << dt << " ms." << endl;
+		cout << "Camera pos: " << camera << endl;
+	}
 	Uint8* keystate = SDL_GetKeyState( 0 );
 
+	float delta_move = 0.25f;
 
 	vec3 forward (0,0,1);
 	vec3 down (0,1,0);
 	vec3 right (1,0,0);
+
+	forward *= delta_move;
+	down *= delta_move;
+	right *= delta_move;
 
 	//forward *= sf * dt;
 	//right *= sf * dt;
