@@ -5,15 +5,18 @@
 #include "TestModel.h"
 
 
-Triangle::Triangle(glm::vec3 v0, glm::vec3 v1, glm::vec3 v2, glm::vec3 color)
-:v0(v0), v1(v1), v2(v2), color(color){
+Triangle::Triangle(glm::vec3 v0,glm::vec3 v1,glm::vec3 v2, glm::vec3 color):  color(color){
+	vertecies[0] = v0;
+	vertecies[1] = v1;
+	vertecies[2] = v2;
 	ComputeNormal();
 }
 
+
 void Triangle::ComputeNormal()
 {
-	glm::vec3 e1 = v1-v0;
-	glm::vec3 e2 = v2-v0;
+	glm::vec3 e1 = vertecies[1]-vertecies[0];
+	glm::vec3 e2 = vertecies[2]-vertecies[0];
 	normal = glm::normalize( glm::cross( e2, e1 ) );
 }
 
@@ -145,21 +148,21 @@ void LoadTestModel( std::vector<Triangle>& triangles )
 
 	for( size_t i=0; i<triangles.size(); ++i )
 	{
-		triangles[i].v0 *= 2/L;
-		triangles[i].v1 *= 2/L;
-		triangles[i].v2 *= 2/L;
+		triangles[i].vertecies[0] *= 2/L;
+		triangles[i].vertecies[1] *= 2/L;
+		triangles[i].vertecies[2] *= 2/L;
 
-		triangles[i].v0 -= vec3(1,1,1);
-		triangles[i].v1 -= vec3(1,1,1);
-		triangles[i].v2 -= vec3(1,1,1);
+		triangles[i].vertecies[0] -= vec3(1,1,1);
+		triangles[i].vertecies[1] -= vec3(1,1,1);
+		triangles[i].vertecies[2] -= vec3(1,1,1);
 
-		triangles[i].v0.x *= 1;
-		triangles[i].v1.x *= 1;
-		triangles[i].v2.x *= 1;
+		triangles[i].vertecies[0].x *= 1;
+		triangles[i].vertecies[1].x *= 1;
+		triangles[i].vertecies[2].x *= 1;
 
-		triangles[i].v0.y *= -1;
-		triangles[i].v1.y *= -1;
-		triangles[i].v2.y *= -1;
+		triangles[i].vertecies[0].y *= -1;
+		triangles[i].vertecies[1].y *= -1;
+		triangles[i].vertecies[2].y *= -1;
 
 		triangles[i].ComputeNormal();
 	}

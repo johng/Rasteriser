@@ -20,7 +20,7 @@ public:
 		};
 
 		Renderer(SDL_Surface* screen);
-		virtual void Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triangles) = 0;
+		virtual void Draw(Camera &camera,Lighting &lighting) = 0;
 
 protected:
     SDL_Surface * screen;

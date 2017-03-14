@@ -43,7 +43,7 @@ int main(int argc, char* argv[] )
 	//SDL_WM_GrabInput( SDL_GRAB_ON );
 	//SDL_ShowCursor(0);
 
-	Rasteriser r (screen) ;
+	Rasteriser r (screen, triangles) ;
 
 	//A bit of a hack to flush initial events
 	SDL_Event e;
@@ -52,11 +52,11 @@ int main(int argc, char* argv[] )
 	if(show_screen) {
 		while (NoQuitMessageSDL()) {
 			ProcessInput(t, camera, lighting , debug);
-			r.Draw(camera, lighting, triangles);
+			r.Draw(camera, lighting);
 		}
 	}else{
 
-		r.Draw(camera, lighting, triangles);
+		r.Draw(camera, lighting);
 	}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
 	return 0;

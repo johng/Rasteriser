@@ -20,12 +20,12 @@ class Rasteriser : Renderer {
 
 
 public:
-		Rasteriser(SDL_Surface *screen);
-		void Draw(Camera &camera,Lighting &lighting,vector<Triangle>& triangles);
+		Rasteriser(SDL_Surface *screen,vector<Triangle>& triangles);
+		void Draw(Camera &camera,Lighting &lighting);
 
 protected:
 
-
+		vector<Triangle>& triangles;
 
 private:
 
@@ -33,16 +33,17 @@ private:
 		float * depthBufferLight;
 
 		vec3 getPoint(int x, int y, int w, int h);
-		void DrawPolygon(const Triangle &t, Shader& shader, Camera camera, Lighting lighting , float * z_buffer, bool draw_screen);
+		void DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
 		void ViewPort(int x, int y, int w, int h);
     void Projection(float c);
     vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P);
+
 		struct DepthShader: Shader {
 				Rasteriser *r;
 				mat3 tri;
 				DepthShader(Rasteriser *rr) : tri(0), r(rr) {}
-				vec4 proj(vec4 vertex, int j);
+				vec4 proj(int triangle_index, int j);
 				bool fragment(vec3 bar, vec3 & colour);
 		};
 
@@ -50,7 +51,7 @@ private:
 				Rasteriser * r;
 				mat4 screen_shadow;
 				mat3 tri;
-				vec3
+				int t_index;
 				Shadow(Rasteriser * rr, mat4 sc) : tri(0), r(rr) , screen_shadow(sc) {};
 				vec4 proj(int triangle_index, int vertex_index);
 				bool fragment(vec3 bar, vec3 & colour);
