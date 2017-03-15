@@ -48,11 +48,20 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   p = p/p.w;
   int idx =  int(p[0]) + int(p[1])*r->width;
 
+  vec3 vv = r->triangles[t_index].vertecies[0] * bar.x +
+            r->triangles[t_index].vertecies[1] * bar.y +
+            r->triangles[t_index].vertecies[2] * bar.z ;
+
+
+
   Triangle t = r->triangles[t_index];
+  float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
+  float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
+
 
   if(idx >= 0 && idx < r->width*r->height) {
-    float shadow = .3 + .7 * (r->depthBufferLight[idx] < p[2] + 44);
-    colour = vec3(1, 1, 1) * std::min<float>(shadow, 1) * t.color ;
+    float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
+    colour = vec3(1, 1, 1) * std::min<float>(shadow, 1) * t.color * light ;
   }else{
     colour = vec3(0,0,0);
   }
@@ -195,14 +204,14 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   vec3 center(0,0,0);
   vec3 up(0,1,0);
-  vec3 light = lighting.position();
-  vec3 eye = camera.position();
+  light_pos = lighting.position();
+  camera_pos = camera.position();
 
   ViewPort(width/8, height/8, width*3/4, height*3/4);
 
 
-  light = normalize(light);
-  LookAt(light, center, up);
+  light_pos = normalize(light_pos);
+  LookAt(light_pos, center, up);
 
 
   Projection(0);
@@ -218,16 +227,19 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
     for(int j = 0; j < 3 ;j++){
       verticies[j] = depthShader.proj(i,j);
     }
-    DrawPolygon( verticies, depthShader  , depthBufferLight , false );
+    DrawPolygon( verticies, depthShader  , depthBufferLight , true );
 	}
 
 
-  LookAt(eye, center, up);
-  Projection(-1.f/ length(eye-center));
 
-  mat4 M =  inverse(modelView * projection * viewPort) * MM;
 
-  Shadow shadowShader(this, M);
+
+  LookAt(camera_pos, center, up);
+  Projection(-1.f/ length(camera_pos-center));
+
+  mat4 camera_light =  inverse(modelView * projection * viewPort) * MM;
+
+  Shadow shadowShader(this, camera_light, modelView);
 
   for(int i = 0 ; i <triangles.size(); i++){
     for(int j = 0; j < 3 ;j++){
@@ -236,12 +248,12 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
     DrawPolygon( verticies, shadowShader,depthBufferCamera , true );
   }
 
+  if (SDL_MUSTLOCK(screen)) {
+    SDL_UnlockSurface(screen);
+  }
 
-	if (SDL_MUSTLOCK(screen)) {
-		SDL_UnlockSurface(screen);
-	}
-
-	SDL_UpdateRect( screen, 0, 0, 0, 0 );
+  SDL_UpdateRect( screen, 0, 0, 0, 0 );
+  return;
 }
 
 

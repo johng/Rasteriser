@@ -33,7 +33,7 @@ int main(int argc, char* argv[] )
 	vector<Triangle> triangles;
 
 	Camera camera(vec3(-0.5,-0.5,-3));
-	Lighting lighting(vec3(0,0,-5), vec3(1,1,1));
+	Lighting lighting(vec3(0,0,-5), vec3(1,1,1)*2.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.

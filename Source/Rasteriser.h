@@ -26,6 +26,8 @@ public:
 protected:
 
 		vector<Triangle>& triangles;
+    vec3 light_pos;
+    vec3 camera_pos;
 
 private:
 
@@ -50,9 +52,10 @@ private:
 		struct Shadow: Shader {
 				Rasteriser * r;
 				mat4 screen_shadow;
+        mat4 modelView;
 				mat3 tri;
 				int t_index;
-				Shadow(Rasteriser * rr, mat4 sc) : tri(0), r(rr) , screen_shadow(sc) {};
+				Shadow(Rasteriser * rr, mat4 sc, mat4 modelView) : tri(0), r(rr) , screen_shadow(sc), modelView(modelView) {};
 				vec4 proj(int triangle_index, int vertex_index);
 				bool fragment(vec3 bar, vec3 & colour);
 		};
