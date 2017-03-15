@@ -4,7 +4,7 @@
 #include "Camera.h"
 #include "Lighting.h"
 #include "Rasteriser.h"
-
+#define PI 3.14159265359
 #define C(x,y,width,height)  (x + y * width)
 
 vec3 Rasteriser::getPoint(int x, int y, int w, int h)
@@ -53,7 +53,6 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
             r->triangles[t_index].vertecies[2] * bar.z ;
 
 
-
   Triangle t = r->triangles[t_index];
   float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
   float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
@@ -61,7 +60,13 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
   if(idx >= 0 && idx < r->width*r->height) {
     float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
-    colour = vec3(1, 1, 1) * std::min<float>(shadow, 1) * t.color * light ;
+
+    float dist = length(vv- (r->light_pos) );
+    dist  = dist * dist;
+
+    vec3 intensity = r->light_colour / (float)(4 * PI * dist);
+
+    colour = intensity * std::min<float>(shadow, 1) * t.color * light ;
   }else{
     colour = vec3(0,0,0);
   }
@@ -206,7 +211,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
   vec3 up(0,1,0);
   light_pos = lighting.position();
   camera_pos = camera.position();
-
+  light_colour = lighting.colour();
   ViewPort(width/8, height/8, width*3/4, height*3/4);
 
 

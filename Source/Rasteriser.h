@@ -28,6 +28,7 @@ protected:
 		vector<Triangle>& triangles;
     vec3 light_pos;
     vec3 camera_pos;
+    vec3 light_colour;
 
 private:
 
