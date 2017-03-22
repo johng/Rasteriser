@@ -32,7 +32,7 @@ int main(int argc, char* argv[] )
 
 	vector<Triangle> triangles;
 
-	Camera camera(vec3(-0.5,-0.5,-3));
+	Camera camera(vec3(-5,-5,-16));
 	Lighting lighting(vec3(0,0,-5), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );

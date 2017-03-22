@@ -7,7 +7,7 @@
 #define PI 3.14159265359
 #define C(x,y,width,height)  (x + y * width)
 
-vec3 Rasteriser::getPoint(int x, int y, int w, int h)
+vec3 Rasteriser::getPoint(int x, int y)
 {
   return vec3(
           (x - width/2)/ (float) width,
@@ -55,11 +55,11 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
   Triangle t = r->triangles[t_index];
   float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
-  float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
+  float light = 0.1f + std::max(0.0f,  diff)  ; //todo reduce intensity for far away
 
 
   if(idx >= 0 && idx < r->width*r->height) {
-    float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
+    float shadow = 0.5f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
 
     float dist = length(vv- (r->light_pos) );
     dist  = dist * dist;
@@ -105,9 +105,33 @@ void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, b
   vec4 v1 = vetex[1];
   vec4 v2 = vetex[2];
 
+  mat4 mmm = inverse(modelView * projection * viewPort) * projection * viewPort;
+
+  vec4 v0_dash = vetex[0] * mmm;
+  vec4 v1_dash = vetex[1] * mmm;
+  vec4 v2_dash = vetex[2] *  mmm;
+
+
+  mat3 M(v0_dash,v2_dash , v1_dash);
+
+  mat3 M_i = glm::inverse(M);
+
+  vec3 ww = vec3(1, 1, 1) * M_i;
+
   //todo bounding box
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
+
+      vec3 p = getPoint(x, y);
+      //vec3 p(x,y,1);
+      vec3 E = M_i * p;
+
+      if (E.x < 0 ||
+          E.y < 0 ||
+          E.z < 0) {
+        //continue;
+      }
+
       vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
                            vec2(v1.x/v1.w,v1.y/v1.w),
                            vec2(v2.x/v2.w,v2.y/v2.w),
