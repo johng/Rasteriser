@@ -65,9 +65,9 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
     dist  = dist * dist;
 
     vec3 intensity = r->light_colour / (float)(4 * PI * dist);
-
     colour = intensity * std::min<float>(shadow, 1) * t.color * light ;
-  }else{
+
+	}else{
     colour = vec3(0,0,0);
   }
 
@@ -99,7 +99,6 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 }
 
 void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, bool draw_screen) {
-
 
   vec4 v0 = vetex[0];
   vec4 v1 = vetex[1];
@@ -226,18 +225,15 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   vec4 verticies[3];
 
+	//todo split into tiles
 
   for(int i = 0 ; i <triangles.size(); i++){
 
     for(int j = 0; j < 3 ;j++){
       verticies[j] = depthShader.proj(i,j);
     }
-    DrawPolygon( verticies, depthShader  , depthBufferLight , true );
+    DrawPolygon( verticies, depthShader  , depthBufferLight , false );
 	}
-
-
-
-
 
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));

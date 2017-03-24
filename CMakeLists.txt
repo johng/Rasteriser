@@ -22,7 +22,7 @@ file(GLOB SRC
         "Source/*.cpp"
         )
 
-add_executable(Main ${SRC})
+add_executable(Main ${SRC} Source/TGAImage.cpp Source/TGAImage.cpp Source/TGAImage.h)
 
 set(EXECUTABLE_OUTPUT_PATH "..")
 
