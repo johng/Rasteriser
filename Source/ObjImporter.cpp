@@ -6,7 +6,7 @@
 #include <sstream>
 #include <glm/gtx/string_cast.hpp>
 
-void ImportFromFile(std::string filename, std::vector<Triangle>& triangles, Material *material)
+void ImportFromFile(std::string filename, std::vector<Triangle>& triangles)
 {
   std::vector<glm::vec3> vs;
   std::vector<glm::vec3> vts;
@@ -36,7 +36,7 @@ void ImportFromFile(std::string filename, std::vector<Triangle>& triangles, Mate
     {
       glm::vec3 vn;
       for(int i=0; i<3; i++) ss >> vn[i];
-      vts.push_back(vn);
+      vns.push_back(vn);
     }
     if (line.compare(0, 2, "f ") == 0) //something else
     {
@@ -61,7 +61,7 @@ void ImportFromFile(std::string filename, std::vector<Triangle>& triangles, Mate
         }
         i++;
       }
-      Triangle tri(vs[tmp[0]-1], vs[tmp[1]-1], vs[tmp[2]-1], material);
+      Triangle tri(vs[tmp[0]-1], vs[tmp[1]-1], vs[tmp[2]-1], glm::vec3(1,1,1));
       triangles.push_back(tri);
     }
   }

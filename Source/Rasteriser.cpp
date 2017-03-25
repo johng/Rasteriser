@@ -1,6 +1,6 @@
 #include <iostream>
 #include <glm/glm.hpp>
-#include "TestModel.h"
+#include "Triangle.h"
 #include "Camera.h"
 #include "Lighting.h"
 #include "Rasteriser.h"
