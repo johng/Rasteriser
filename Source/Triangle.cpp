@@ -1,8 +1,4 @@
-//
-// Created by John Griffith on 15/02/2017.
-//
-
-#include "TestModel.h"
+#include "Triangle.h"
 
 
 Triangle::Triangle(glm::vec3 v0,glm::vec3 v1,glm::vec3 v2, glm::vec3 color):  color(color){

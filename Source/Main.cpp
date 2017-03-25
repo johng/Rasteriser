@@ -1,5 +1,5 @@
 #include "Rasteriser.h"
-#include "TestModel.h"
+#include "Triangle.h"
 #include "Lighting.h"
 
 #include "TGAImport.h"

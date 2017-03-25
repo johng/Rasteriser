@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "TestModel.h"
+#include "Triangle.h"
 #include "SDLauxiliary.h"
 #include "Camera.h"
 #include "Lighting.h"

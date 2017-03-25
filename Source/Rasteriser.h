@@ -3,7 +3,7 @@
 
 #include "Renderer.h"
 #include "Lighting.h"
-#include "TestModel.h"
+#include "Triangle.h"
 #include "SDLauxiliary.h"
 #include <glm/glm.hpp>
 
