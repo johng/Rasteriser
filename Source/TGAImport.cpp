@@ -19,7 +19,7 @@ using namespace std;
 
 
 TGAPixel::TGAPixel( char * ptr, char size){
-  ptr = ptr;
+  this->ptr = ptr;
   this->size = size;
 }
 
