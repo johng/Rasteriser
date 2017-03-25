@@ -8,7 +8,7 @@
 
 
 
-vec3 Rasteriser::getPoint(int x, int y, int w, int h)
+vec3 Rasteriser::getPoint(int x, int y)
 {
   return vec3(
           (x - width/2)/ (float) width,
