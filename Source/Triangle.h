@@ -8,8 +8,8 @@
 class Triangle
 {
 public:
-  glm::vec3 vertices[3];
-  Triangle( glm::vec3 v0, glm::vec3 v1, glm::vec3 v2);
+  glm::ivec3 vertices[3];
+  Triangle( glm::ivec3 v0, glm::ivec3 v1, glm::ivec3 v2);
 };
 
 #endif

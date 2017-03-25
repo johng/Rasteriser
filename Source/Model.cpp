@@ -76,10 +76,10 @@ bool Model::LoadObj(const char * filename)
 }
 
 
-vec3 Model::vertex(int triangle, int index){
-  return triangles[triangle].vertices[index];
+vec3 Model::vertex(int triangle, int index) {
+  int vert_index = triangles[triangle].vertices[index].x;
+  return vs[vert_index];
 }
-
 int Model::triangleCount() {
   return triangles.size();
 }

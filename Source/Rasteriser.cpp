@@ -24,7 +24,7 @@ vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
   for(int i = 0; i < 3 ; i ++){
     tri[i][index] = retval[i]/retval.w;
   }
-
+  return retval;
 }
 
 bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
@@ -63,6 +63,7 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
 
   if(idx >= 0 && idx < r->width*r->height) {
+
     float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
 
    // float dist = length(vv- (r->light_pos) );
@@ -232,7 +233,9 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
 	//todo split into tiles
 
-  for(int i = 0 ; i < model->triangleCount(); i++){
+  int renderCount = model->triangleCount();
+
+  for(int i = 0 ; i < renderCount; i++){
 
     for(int j = 0; j < 3 ;j++){
       verticies[j] = depthShader.proj(i,j);
@@ -247,7 +250,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   Shadow shadowShader(this, camera_light, modelView);
 
-  for(int i = 0 ; i < model->triangleCount(); i++){
+  for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       verticies[j] = shadowShader.proj(i,j);
     }
