@@ -1,11 +1,12 @@
 #include <iostream>
 #include <glm/glm.hpp>
-#include "Triangle.h"
 #include "Camera.h"
 #include "Lighting.h"
 #include "Rasteriser.h"
 #define PI 3.14159265359
 #define C(x,y,width,height)  (x + y * width)
+
+
 
 vec3 Rasteriser::getPoint(int x, int y, int w, int h)
 {
@@ -17,12 +18,13 @@ vec3 Rasteriser::getPoint(int x, int y, int w, int h)
 
 
 vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
-  vec4 vertex = vec4(r->triangles[triangle_index].vertecies[index],1);
+
+  vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
   vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
     tri[i][index] = retval[i]/retval.w;
   }
-  return retval;
+
 }
 
 bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
@@ -34,7 +36,7 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 
 vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
 
-  vec4 vertex = vec4(r->triangles[triangle_index].vertecies[index],1);
+  vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
   vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
     tri[i][index] = retval[i]/retval.w;
@@ -44,28 +46,31 @@ vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
 }
 
 bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
+
   vec4 p =   vec4(bar*tri,1) * screen_shadow ;
   p = p/p.w;
   int idx =  int(p[0]) + int(p[1])*r->width;
 
-  vec3 vv = r->triangles[t_index].vertecies[0] * bar.x +
-            r->triangles[t_index].vertecies[1] * bar.y +
-            r->triangles[t_index].vertecies[2] * bar.z ;
+
+  //vec3 vv = r->triangles[t_index].vertecies[0] * bar.x +
+    //        r->triangles[t_index].vertecies[1] * bar.y +
+      //      r->triangles[t_index].vertecies[2] * bar.z ;
 
 
-  Triangle t = r->triangles[t_index];
-  float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
-  float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
+  //Triangle t = r->[t_index];
+ // float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
+  //float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
 
 
   if(idx >= 0 && idx < r->width*r->height) {
     float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
 
-    float dist = length(vv- (r->light_pos) );
-    dist  = dist * dist;
+   // float dist = length(vv- (r->light_pos) );
+    //dist  = dist * dist;
 
-    vec3 intensity = r->light_colour / (float)(4 * PI * dist);
-    colour = intensity * std::min<float>(shadow, 1) * t.color * light ;
+    //vec3 intensity = r->light_colour / (float)(4 * PI * dist);
+    colour = std::min<float>(shadow, 1) * vec3(1,1,1) ;
+    //colour = intensity * std::min<float>(shadow, 1) * t.color ;
 
 	}else{
     colour = vec3(0,0,0);
@@ -75,7 +80,7 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 }
 
 
-Rasteriser::Rasteriser(SDL_Surface *screen,vector<Triangle>& triangles) : Renderer(screen), triangles(triangles) {
+Rasteriser::Rasteriser(SDL_Surface *screen,Model * model) : Renderer(screen), model(model) {
   this->depth = 2000.f;
 	this->screen = screen;
 	this->width = screen->w;
@@ -227,7 +232,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
 	//todo split into tiles
 
-  for(int i = 0 ; i <triangles.size(); i++){
+  for(int i = 0 ; i < model->triangleCount(); i++){
 
     for(int j = 0; j < 3 ;j++){
       verticies[j] = depthShader.proj(i,j);
@@ -242,7 +247,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   Shadow shadowShader(this, camera_light, modelView);
 
-  for(int i = 0 ; i <triangles.size(); i++){
+  for(int i = 0 ; i < model->triangleCount(); i++){
     for(int j = 0; j < 3 ;j++){
       verticies[j] = shadowShader.proj(i,j);
     }

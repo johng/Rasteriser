@@ -2,25 +2,25 @@
 // Created by John Griffith on 24/03/2017.
 //
 
-#include "TGAImport.h"
+#include "Texture.h"
 #include<iostream>
 #include<fstream>
 
 using namespace std;
 
-TGAPixel::TGAPixel( char * ptr, char size){
+TexturePixel::TexturePixel( char * ptr, char size){
   this->ptr = ptr;
   this->size = size;
 }
 
 
-bool TGAImport::ReadTGAImage(char *filename) {
+bool Texture::ReadTGAImage(char *filename) {
 
 
   ifstream stream;
   stream.open(filename, ios::binary);
 
-  struct _TgaHeader tgaHeader;
+  struct TGAHeader tgaHeader;
   stream.read((char*)&tgaHeader, sizeof(tgaHeader));
 
 
@@ -109,16 +109,16 @@ bool TGAImport::ReadTGAImage(char *filename) {
 
 }
 
-int TGAImport::GetHeight(){
+int Texture::GetHeight(){
   return height;
 };
 
-int TGAImport::GetWidth(){
+int Texture::GetWidth(){
   return width;
 };
 
 
-TGAPixel TGAImport::Get(int x, int y) {
+TexturePixel Texture::Get(int x, int y) {
 
   if(x < 0 || x >= width || y < 0 || y >=0){
     cout << "Invalid pixel coordinate!" << endl;
@@ -126,12 +126,12 @@ TGAPixel TGAImport::Get(int x, int y) {
     exit(-1);
   }
   char * ptr = &texture_data[x + y * width];
-  TGAPixel ret(ptr, bytesPerPixel) ;
+  TexturePixel ret(ptr, bytesPerPixel) ;
   return ret;
 }
 
 
-void TGAImport::Mirror_horizontally() {
+void Texture::Mirror_horizontally() {
 
   int swaps = width>>1; //Divide by 2, ensuring we round down
   char* temp = (char*)malloc(bytesPerPixel);
@@ -139,8 +139,8 @@ void TGAImport::Mirror_horizontally() {
   for(int h =0; h< height; h++) {
     for (int s = 0; s < swaps; s++) {
 
-      TGAPixel p1 = Get(s, h);
-      TGAPixel p2 = Get(width - (s+1), h);
+      TexturePixel p1 = Get(s, h);
+      TexturePixel p2 = Get(width - (s+1), h);
 
       //todo should probably fine a better way of doing this
 
@@ -156,15 +156,15 @@ void TGAImport::Mirror_horizontally() {
 }
 
 
-void TGAImport::Mirror_vertically() {
+void Texture::Mirror_vertically() {
 
   int swaps = width>>1; //Divide by 2, ensuring we round down
 
   char* temp = (char*)malloc(width * bytesPerPixel);
   for(int s = 0; s < swaps; s++){
 
-    TGAPixel p1 = Get(0, s);
-    TGAPixel p2 = Get(0, height - (s+1));
+    TexturePixel p1 = Get(0, s);
+    TexturePixel p2 = Get(0, height - (s+1));
 
     memcpy(p1.ptr,p2.ptr,bytesPerPixel * width);
     memcpy(p2.ptr,p1.ptr,bytesPerPixel * width);
