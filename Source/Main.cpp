@@ -38,7 +38,7 @@ int main(int argc, char* argv[] )
 	}
 
 
-	Camera camera(vec3(-5,-5,-16));
+	Camera camera(vec3(-1,-1,-4));
 	Lighting lighting(vec3(0,0,-5), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
