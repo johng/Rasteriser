@@ -9,7 +9,7 @@
 #include <tic.h>
 #include <cstdint>
 
-struct _TgaHeader
+struct TGAHeader
 {
 		uint8_t IDLength;
 		uint8_t ColorMapType;
@@ -28,16 +28,16 @@ struct _TgaHeader
 		uint8_t ImageDescriptor;
 } ;
 
-struct TGAPixel {
+struct TexturePixel {
     char * ptr;
     char size ;
-    TGAPixel( char * ptr, char size);
+    TexturePixel( char * ptr, char size);
 };
 
 
 
 
-class TGAImport {
+class Texture {
 
 private:
     char * texture_data;
@@ -52,7 +52,7 @@ public:
 		int GetHeight();
     void Mirror_horizontally();
     void Mirror_vertically();
-    TGAPixel Get(int x, int y);
+    TexturePixel Get(int x, int y);
 
 };
 

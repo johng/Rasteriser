@@ -1,8 +1,7 @@
 #include "Rasteriser.h"
-#include "Triangle.h"
 #include "Lighting.h"
-
-#include "TGAImport.h"
+#include "Model.h"
+#include "Texture.h"
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug );
 using namespace std;
 using glm::vec3;
@@ -15,11 +14,12 @@ const int SCREEN_HEIGHT = 500;
 int main(int argc, char* argv[] )
 {
 
-  TGAImport tgaImage;
-  tgaImage.ReadTGAImage("./Models/Diablo/diablo3_pose_diffuse.tga");
+  //Texture tgaImage;
+  //tgaImage.ReadTGAImage("./Models/Diablo/diablo3_pose_diffuse.tga");
 
-
-  return 1;
+	Model model;
+	model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
+	//model.LoadObj("./Models/Diablo/diablo3_pose.obj");
 
 	bool debug = false;
 	bool show_screen = true;
@@ -37,7 +37,6 @@ int main(int argc, char* argv[] )
 
 	}
 
-	vector<Triangle> triangles;
 
 	Camera camera(vec3(-5,-5,-16));
 	Lighting lighting(vec3(0,0,-5), vec3(1,1,1)*14.0f);
@@ -45,12 +44,11 @@ int main(int argc, char* argv[] )
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
 
-	LoadTestModel( triangles );
 
 	//SDL_WM_GrabInput( SDL_GRAB_ON );
 	//SDL_ShowCursor(0);
 
-	Rasteriser r (screen, triangles) ;
+	Rasteriser r (screen, &model) ;
 
 	//A bit of a hack to flush initial events
 	SDL_Event e;
