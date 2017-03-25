@@ -2,6 +2,7 @@
 #include "TestModel.h"
 #include "Lighting.h"
 
+#include "TGAImport.h"
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug );
 using namespace std;
 using glm::vec3;
@@ -13,6 +14,12 @@ const int SCREEN_HEIGHT = 500;
 
 int main(int argc, char* argv[] )
 {
+
+  TGAImport tgaImage;
+  tgaImage.ReadTGAImage("./Models/Diablo/diablo3_pose_diffuse.tga");
+
+
+  return 1;
 
 	bool debug = false;
 	bool show_screen = true;
