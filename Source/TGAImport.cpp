@@ -6,17 +6,7 @@
 #include<iostream>
 #include<fstream>
 
-
 using namespace std;
-
-/*
- * HEADER
- * ID INFO
- *
- *
- */
-
-
 
 TGAPixel::TGAPixel( char * ptr, char size){
   this->ptr = ptr;
@@ -132,7 +122,8 @@ TGAPixel TGAImport::Get(int x, int y) {
 
   if(x < 0 || x >= width || y < 0 || y >=0){
     cout << "Invalid pixel coordinate!" << endl;
-    return NULL;
+    //todo check if quiting is too extreme
+    exit(-1);
   }
   char * ptr = &texture_data[x + y * width];
   TGAPixel ret(ptr, bytesPerPixel) ;
@@ -143,6 +134,8 @@ TGAPixel TGAImport::Get(int x, int y) {
 void TGAImport::Mirror_horizontally() {
 
   int swaps = width>>1; //Divide by 2, ensuring we round down
+  char* temp = (char*)malloc(bytesPerPixel);
+
   for(int h =0; h< height; h++) {
     for (int s = 0; s < swaps; s++) {
 
@@ -150,13 +143,15 @@ void TGAImport::Mirror_horizontally() {
       TGAPixel p2 = Get(width - (s+1), h);
 
       //todo should probably fine a better way of doing this
-      char temp[4];
-      memcpy(temp,p1.ptr,p1.size);
-      memcpy(p1.ptr,p2.ptr,p1.size);
-      memcpy(p2.ptr,p1.ptr,p1.size);
+
+      memcpy(temp,p1.ptr,bytesPerPixel);
+      memcpy(p1.ptr,p2.ptr,bytesPerPixel);
+      memcpy(p2.ptr,p1.ptr,bytesPerPixel);
 
     }
   }
+
+  free(temp);
 
 }
 
@@ -164,13 +159,18 @@ void TGAImport::Mirror_horizontally() {
 void TGAImport::Mirror_vertically() {
 
   int swaps = width>>1; //Divide by 2, ensuring we round down
+
+  char* temp = (char*)malloc(width * bytesPerPixel);
   for(int s = 0; s < swaps; s++){
 
+    TGAPixel p1 = Get(0, s);
+    TGAPixel p2 = Get(0, height - (s+1));
 
+    memcpy(p1.ptr,p2.ptr,bytesPerPixel * width);
+    memcpy(p2.ptr,p1.ptr,bytesPerPixel * width);
 
   }
 
-
-
+  free(temp);
 
 }
