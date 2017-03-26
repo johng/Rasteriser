@@ -66,10 +66,6 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   //cout << texture.x << "," << texture.y << endl;
   vec3 cc ((int)pixel.ptr[0],(int)pixel.ptr[1],(int)pixel.ptr[2]);
 
-  colour = cc;
-
-  return true;
-
   if(idx >= 0 && idx < r->width*r->height) {
 
     float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < (p[2] + 10));
@@ -77,7 +73,7 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
     //dist  = dist * dist;
     //vec3 intensity = r->light_colour / (float)(4 * PI * dist);
     colour = std::min<float>(shadow, 1) * cc ;
-    //colour = intensity * std::min<float>(shadow, 1) * t.color ;
+    //colour = intensity * std::min<float>(shadow, 1) * cc ;
 	}else{
     colour = vec3(0,0,0);
   }

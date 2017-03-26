@@ -12,34 +12,39 @@ bool Model::LoadObj(const char * filename)
 
   bool debug = false;
 
-  ifstream ifs(filename);
-  string line;
-  while (getline(ifs, line))
+  std::ifstream ifs(filename);
+  std::string line;
+  while (std::getline(ifs, line))
   {
-    istringstream ss(line.c_str());
+    std::istringstream ss(line);
     ss.clear();
-    ss.ignore();
 
     if (line.compare(0, 2, "v ") == 0) //This is a vertex
     {
-      vec3 v;
+      ss.ignore();
+      glm::vec3 v;
       for(int i=0; i<3; i++) ss >> v[i];
+
       vs.push_back(v);
     }
     if (line.compare(0, 3, "vt ") == 0) //This is a texture coordinate
     {
-      vec2 vt;
+      ss.ignore(2);
+      glm::vec3 vt;
       for(int i=0; i<2; i++) ss >> vt[i];
+
       vts.push_back(vt);
     }
     if (line.compare(0, 3, "vn ") == 0) //This is a vertex normal
     {
-      vec3 vn;
+      ss.ignore(2);
+      glm::vec3 vn;
       for(int i=0; i<3; i++) ss >> vn[i];
-      vns.push_back(vn);
+      vts.push_back(vn);
     }
     if (line.compare(0, 2, "f ") == 0) //something else
     {
+      ss.ignore();
 
       int i = 0;
       char discard;
