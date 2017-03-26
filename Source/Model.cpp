@@ -14,7 +14,6 @@ bool Model::LoadObj(const char * filename)
 
   ifstream ifs(filename);
   string line;
-
   while (getline(ifs, line))
   {
     istringstream ss(line.c_str());
@@ -27,10 +26,10 @@ bool Model::LoadObj(const char * filename)
       for(int i=0; i<3; i++) ss >> v[i];
       vs.push_back(v);
     }
-    if (line.compare(0, 3, "vt ") == 0) //This is a texture coordinate 
+    if (line.compare(0, 3, "vt ") == 0) //This is a texture coordinate
     {
-      vec3 vt;
-      for(int i=0; i<3; i++) ss >> vt[i];
+      vec2 vt;
+      for(int i=0; i<2; i++) ss >> vt[i];
       vts.push_back(vt);
     }
     if (line.compare(0, 3, "vn ") == 0) //This is a vertex normal
@@ -78,10 +77,29 @@ bool Model::LoadObj(const char * filename)
 }
 
 
+bool Model::LoadDiffuseTexture(const char *filename) {
+
+  Texture texture;
+  texture.ReadTGAImage(filename);
+  diffuseTexture = texture;
+
+}
+
 vec3 Model::vertex(int triangle, int index) {
   int vert_index = triangles[triangle].vertices[index].x;
   return vs[vert_index];
 }
+
+vec2 Model::textureCoordinate(int trianlge, int index){
+  int texture_index = triangles[trianlge].vertices[index].y;
+  return vts[texture_index];
+}
+
 int Model::triangleCount() {
   return triangles.size();
+}
+
+TexturePixel Model::diffuse(vec2 textureCoordinate) {
+  ivec2 coordinate(textureCoordinate.x * diffuseTexture.GetWidth(), textureCoordinate.y * diffuseTexture.GetHeight());
+  return diffuseTexture.Get(coordinate[0],coordinate[1]);
 }

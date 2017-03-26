@@ -47,7 +47,7 @@ private:
 
 
 public:
-		bool ReadTGAImage(char * filename );
+		bool ReadTGAImage(const char * filename );
 		int GetWidth();
 		int GetHeight();
     void Mirror_horizontally();

@@ -34,6 +34,7 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 
 
 vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
+  textureCoordinates[index] = r->model->textureCoordinate(triangle_index,index);
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
   vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
@@ -60,13 +61,22 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   //float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
 
 
+  vec2 texture =  bar * textureCoordinates;
+  TexturePixel pixel = r->model->diffuse(texture);
+  //cout << texture.x << "," << texture.y << endl;
+  vec3 cc ((int)pixel.ptr[0],(int)pixel.ptr[1],(int)pixel.ptr[2]);
+
+  colour = cc;
+
+  return true;
+
   if(idx >= 0 && idx < r->width*r->height) {
 
     float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < (p[2] + 10));
     // float dist = length(vv- (r->light_pos) );
     //dist  = dist * dist;
     //vec3 intensity = r->light_colour / (float)(4 * PI * dist);
-    colour = std::min<float>(shadow, 1) * vec3(1,1,1) ;
+    colour = std::min<float>(shadow, 1) * cc ;
     //colour = intensity * std::min<float>(shadow, 1) * t.color ;
 	}else{
     colour = vec3(0,0,0);
@@ -105,9 +115,21 @@ void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, b
   vec4 v1 = vetex[1];
   vec4 v2 = vetex[2];
 
+
+
+  vec2 bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
+  vec2 bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+  for (int i=0; i<3; i++) {
+    for (int j=0; j<2; j++) {
+      bboxmin[j] = std::min(bboxmin[j], vetex[i][j]/vetex[i][3]);
+      bboxmax[j] = std::max(bboxmax[j], vetex[i][j]/vetex[i][3]);
+    }
+  }
+
+
   //todo bounding box
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
+  for (int x=bboxmin.x; x<=bboxmax.x; x++) {
+    for (int y=bboxmin.y; y<=bboxmax.y; y++) {
 
       vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
                            vec2(v1.x/v1.w,v1.y/v1.w),

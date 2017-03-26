@@ -48,6 +48,7 @@ private:
 
 		struct Shadow: Shader {
 				Rasteriser * r;
+				glm::mat3x2 textureCoordinates;
 				mat4 screen_shadow;
         mat4 modelView;
 				mat3 tri;

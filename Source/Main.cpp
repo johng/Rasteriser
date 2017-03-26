@@ -20,6 +20,7 @@ int main(int argc, char* argv[] )
 	Model model;
 	//model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
 	model.LoadObj("./Models/Diablo/diablo3_pose.obj");
+  model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
 
 	bool debug = false;
 	bool show_screen = true;

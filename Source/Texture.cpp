@@ -14,7 +14,7 @@ TexturePixel::TexturePixel( char * ptr, char size){
 }
 
 
-bool Texture::ReadTGAImage(char *filename) {
+bool Texture::ReadTGAImage(const char *filename) {
 
 
   ifstream stream;
@@ -97,7 +97,6 @@ bool Texture::ReadTGAImage(char *filename) {
 
 
   if (!(tgaHeader.ImageDescriptor & 0x20)) {
-
     Mirror_vertically();
   }
   if (tgaHeader.ImageDescriptor & 0x10) {
@@ -120,7 +119,7 @@ int Texture::GetWidth(){
 
 TexturePixel Texture::Get(int x, int y) {
 
-  if(x < 0 || x >= width || y < 0 || y >=0){
+  if(x < 0 || x >= width || y < 0 || y >=height){
     cout << "Invalid pixel coordinate!" << endl;
     //todo check if quiting is too extreme
     exit(-1);
@@ -142,8 +141,6 @@ void Texture::Mirror_horizontally() {
       TexturePixel p1 = Get(s, h);
       TexturePixel p2 = Get(width - (s+1), h);
 
-      //todo should probably fine a better way of doing this
-
       memcpy(temp,p1.ptr,bytesPerPixel);
       memcpy(p1.ptr,p2.ptr,bytesPerPixel);
       memcpy(p2.ptr,p1.ptr,bytesPerPixel);
@@ -158,7 +155,7 @@ void Texture::Mirror_horizontally() {
 
 void Texture::Mirror_vertically() {
 
-  int swaps = width>>1; //Divide by 2, ensuring we round down
+  int swaps = height>>1; //Divide by 2, ensuring we round down
 
   char* temp = (char*)malloc(width * bytesPerPixel);
   for(int s = 0; s < swaps; s++){
@@ -166,8 +163,9 @@ void Texture::Mirror_vertically() {
     TexturePixel p1 = Get(0, s);
     TexturePixel p2 = Get(0, height - (s+1));
 
-    memcpy(p1.ptr,p2.ptr,bytesPerPixel * width);
+    memcpy(temp,p2.ptr,bytesPerPixel * width);
     memcpy(p2.ptr,p1.ptr,bytesPerPixel * width);
+    memcpy(p1.ptr,temp,bytesPerPixel * width);
 
   }
 
