@@ -16,7 +16,6 @@ vec3 Rasteriser::getPoint(int x, int y)
            1);
 }
 
-
 vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
@@ -35,7 +34,6 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 
 
 vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
-
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
   vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
@@ -47,32 +45,29 @@ vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
 
 bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
-  vec4 p =   vec4(bar*tri,1) * screen_shadow ;
+  vec4 p = vec4(bar*tri,1) * screen_shadow ;
   p = p/p.w;
   int idx =  int(p[0]) + int(p[1])*r->width;
 
 
   //vec3 vv = r->triangles[t_index].vertecies[0] * bar.x +
-    //        r->triangles[t_index].vertecies[1] * bar.y +
-      //      r->triangles[t_index].vertecies[2] * bar.z ;
+  //        r->triangles[t_index].vertecies[1] * bar.y +
+  //      r->triangles[t_index].vertecies[2] * bar.z ;
 
 
   //Triangle t = r->[t_index];
- // float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
+  // float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
   //float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
 
 
   if(idx >= 0 && idx < r->width*r->height) {
 
-    float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < p[2] + 44);
-
-   // float dist = length(vv- (r->light_pos) );
+    float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < (p[2] + 10));
+    // float dist = length(vv- (r->light_pos) );
     //dist  = dist * dist;
-
     //vec3 intensity = r->light_colour / (float)(4 * PI * dist);
     colour = std::min<float>(shadow, 1) * vec3(1,1,1) ;
     //colour = intensity * std::min<float>(shadow, 1) * t.color ;
-
 	}else{
     colour = vec3(0,0,0);
   }
@@ -113,6 +108,7 @@ void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, b
   //todo bounding box
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
+
       vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
                            vec2(v1.x/v1.w,v1.y/v1.w),
                            vec2(v2.x/v2.w,v2.y/v2.w),
@@ -121,11 +117,12 @@ void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, b
       float w = v0.w*c.x + v1.w*c.y + v2.w*c.z;
       int frag_depth = z/w;
 
+
       if (c.x<0 || c.y<0 || c.z<0 || z_buffer[x+y*width]>frag_depth) continue;
       vec3 colour ;
       shader.fragment(c, colour);
       z_buffer[x+y*width] = frag_depth;
-      if(draw_screen)PutPixelSDL( screen, x, y, colour );
+      if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
     }
   }
 
@@ -229,18 +226,17 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   DepthShader depthShader(this);
 
-  vec4 verticies[3];
+  vec4 vetex[3];
 
 	//todo split into tiles
 
   int renderCount = model->triangleCount();
 
   for(int i = 0 ; i < renderCount; i++){
-
     for(int j = 0; j < 3 ;j++){
-      verticies[j] = depthShader.proj(i,j);
+      vetex[j] = depthShader.proj(i,j);
     }
-    DrawPolygon( verticies, depthShader  , depthBufferLight , false );
+    DrawPolygon( vetex, depthShader  , depthBufferLight , false );
 	}
 
   LookAt(camera_pos, center, up);
@@ -252,9 +248,9 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
-      verticies[j] = shadowShader.proj(i,j);
+      vetex[j] = shadowShader.proj(i,j);
     }
-    DrawPolygon( verticies, shadowShader,depthBufferCamera , true );
+    DrawPolygon( vetex, shadowShader,depthBufferCamera , true );
   }
 
   if (SDL_MUSTLOCK(screen)) {

@@ -61,12 +61,14 @@ bool Model::LoadObj(const char * filename)
           istringstream svalue(value);
           svalue >> v[i][j];
           if(debug)cout << v[i][j] << ",";
+          v[i][j]--;
           j++;
 
         }
         if(debug)cout << endl;
         i++;
       }
+
 
       if(debug)cout << endl;
       Triangle triangle (v[0],v[1],v[2]);

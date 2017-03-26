@@ -18,8 +18,8 @@ int main(int argc, char* argv[] )
   //tgaImage.ReadTGAImage("./Models/Diablo/diablo3_pose_diffuse.tga");
 
 	Model model;
-	model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
-	//model.LoadObj("./Models/Diablo/diablo3_pose.obj");
+	//model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
+	model.LoadObj("./Models/Diablo/diablo3_pose.obj");
 
 	bool debug = false;
 	bool show_screen = true;
@@ -37,9 +37,8 @@ int main(int argc, char* argv[] )
 
 	}
 
-
-	Camera camera(vec3(-1,-1,-4));
-	Lighting lighting(vec3(0,0,-5), vec3(1,1,1)*14.0f);
+	Camera camera(vec3(1,1,2));
+	Lighting lighting(vec3(1,1,0), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
