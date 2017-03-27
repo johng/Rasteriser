@@ -29,9 +29,9 @@ struct TGAHeader
 } ;
 
 struct TexturePixel {
-    char * ptr;
+    unsigned char * ptr;
     char size ;
-    TexturePixel( char * ptr, char size);
+    TexturePixel( unsigned char * ptr, char size);
 };
 
 
@@ -40,7 +40,7 @@ struct TexturePixel {
 class Texture {
 
 private:
-    char * texture_data;
+    unsigned char * texture_data;
 		int width;
 		int height;
     int bytesPerPixel;

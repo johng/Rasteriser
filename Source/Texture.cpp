@@ -8,7 +8,7 @@
 
 using namespace std;
 
-TexturePixel::TexturePixel( char * ptr, char size){
+TexturePixel::TexturePixel( unsigned char * ptr, char size){
   this->ptr = ptr;
   this->size = size;
 }
@@ -36,10 +36,10 @@ bool Texture::ReadTGAImage(const char *filename) {
 
   int bytes = bytesPerPixel * width * height;
 
-  texture_data = (char*)malloc(bytes);
+  texture_data = (unsigned char*)malloc(bytes);
 
   if(imageType == 1||imageType==2||imageType==3) {
-    stream.read(texture_data, bytes);
+    stream.read((char*)texture_data, bytes);
   }else if(imageType == 10 || imageType == 11 || imageType == 9){
     //RLE encoded data
     cout << "RLE Encoding\n";
@@ -130,7 +130,7 @@ TexturePixel Texture::Get(int x, int y) {
     //todo check if quiting is too extreme
     exit(-1);
   }
-  char * ptr = &texture_data[bytesPerPixel * (x + y * width)];
+  unsigned char * ptr = &texture_data[bytesPerPixel * (x + y * width)];
   TexturePixel ret(ptr, bytesPerPixel) ;
   return ret;
 }
