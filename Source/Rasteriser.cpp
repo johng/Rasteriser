@@ -49,30 +49,31 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   vec4 p = vec4(bar*tri,1) * screen_shadow ;
   p = p/p.w;
   int idx =  int(p[0]) + int(p[1])*r->width;
+  vec2 textureCoordInterp =   textureCoordinates * bar;
 
 
-  //vec3 vv = r->triangles[t_index].vertecies[0] * bar.x +
-  //        r->triangles[t_index].vertecies[1] * bar.y +
-  //      r->triangles[t_index].vertecies[2] * bar.z ;
+  vec4 normal = normalize(vec4(r->model->normalMapTexture(textureCoordInterp),1)); // normal
+  vec3 n = normal * inverse(transpose(projection * modelView));
 
+  vec3 l = normalize(vec4(r->light_pos,1) * projection * modelView ) ;  // light vector
+  vec3 ref = normalize(n*(n*l*2.f) - l);   // reflected light
 
-  //Triangle t = r->[t_index];
-  // float diff = (float)glm::dot(t.normal,  (vv-r->light_pos));
-  //float light = std::max(0.0f,  diff)  ; //todo reduce intensity for far away
+  float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
 
+  float diff = std::max<float>(0.f, glm::dot(n,l));
 
-  vec2 texture =  bar * textureCoordinates;
-  TexturePixel pixel = r->model->diffuse(texture);
-  //cout << texture.x << "," << texture.y << endl;
-  vec3 cc ((int)pixel.ptr[0],(int)pixel.ptr[1],(int)pixel.ptr[2]);
+  TexturePixel diffuse = r->model->diffuseTexture(textureCoordInterp);
+
+  vec3 c ((int)diffuse.ptr[0],(int)diffuse.ptr[1],(int)diffuse.ptr[2]);
 
   if(idx >= 0 && idx < r->width*r->height) {
 
-    float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < (p[2] + 10));
-    // float dist = length(vv- (r->light_pos) );
-    //dist  = dist * dist;
-    //vec3 intensity = r->light_colour / (float)(4 * PI * dist);
-    colour = std::min<float>(shadow, 1) * cc ;
+    float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < (p[2] + 44));
+
+    for (int i=0; i<3; i++) colour[i] =  15.f + c[i] * shadow;
+    //for (int i=0; i<3; i++) colour[i] = std::min<float>(20.0f + c[i]*shadow*( 0.6* spec+ 0.4*diff), 255);
+
+
     //colour = intensity * std::min<float>(shadow, 1) * cc ;
 	}else{
     colour = vec3(0,0,0);

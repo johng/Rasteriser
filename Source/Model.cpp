@@ -40,7 +40,7 @@ bool Model::LoadObj(const char * filename)
       ss.ignore(2);
       glm::vec3 vn;
       for(int i=0; i<3; i++) ss >> vn[i];
-      vts.push_back(vn);
+      vns.push_back(vn);
     }
     if (line.compare(0, 2, "f ") == 0) //something else
     {
@@ -86,25 +86,63 @@ bool Model::LoadDiffuseTexture(const char *filename) {
 
   Texture texture;
   texture.ReadTGAImage(filename);
-  diffuseTexture = texture;
+  diffuse = texture;
 
 }
+
+
+bool Model::LoadNormalMap(const char * filename){
+  Texture texture;
+  texture.ReadTGAImage(filename);
+  normal = texture;
+}
+
+
+bool Model::LoadSpecularTexture(const char * filename){
+  Texture texture;
+  texture.ReadTGAImage(filename);
+  specular = texture;
+}
+
 
 vec3 Model::vertex(int triangle, int index) {
   int vert_index = triangles[triangle].vertices[index].x;
   return vs[vert_index];
 }
 
-vec2 Model::textureCoordinate(int trianlge, int index){
-  int texture_index = triangles[trianlge].vertices[index].y;
+vec2 Model::textureCoordinate(int triangle, int index){
+  int texture_index = triangles[triangle].vertices[index].y;
   return vts[texture_index];
 }
+
+vec3 Model::normalCoodinate(int triangle, int index){
+  int nm_index = triangles[triangle].vertices[index].z;
+  return vns[nm_index];
+};
 
 int Model::triangleCount() {
   return triangles.size();
 }
 
-TexturePixel Model::diffuse(vec2 textureCoordinate) {
-  ivec2 coordinate(textureCoordinate.x * diffuseTexture.GetWidth(), textureCoordinate.y * diffuseTexture.GetHeight());
-  return diffuseTexture.Get(coordinate[0],coordinate[1]);
+TexturePixel Model::diffuseTexture(vec2 textureCoordinate) {
+  ivec2 coordinate(textureCoordinate.x * diffuse.GetWidth(), textureCoordinate.y * diffuse.GetHeight());
+  return diffuse.Get(coordinate[0],coordinate[1]);
 }
+
+vec3 Model::normalMapTexture(vec2 textureCoordinate){
+  ivec2 coordinate(textureCoordinate.x * normal.GetWidth(), textureCoordinate.y * normal.GetHeight());
+  TexturePixel c = normal.Get(coordinate[0],coordinate[1]);
+  vec3 res;
+  for (int i=0; i<3; i++)
+    res[2-i] = ((int)c.ptr[i])/255.f*2.f - 1.f;
+
+  return res;
+}
+
+
+float Model::specularTexture(vec2 textureCoordinate){
+  ivec2 coordinate(textureCoordinate.x * specular.GetWidth(), textureCoordinate.y * specular.GetHeight());
+  return ((int)(specular.Get(coordinate[0],coordinate[1]).ptr[0]))/1.0f;
+}
+
+

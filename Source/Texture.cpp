@@ -97,7 +97,7 @@ bool Texture::ReadTGAImage(const char *filename) {
 
 
   if (!(tgaHeader.ImageDescriptor & 0x20)) {
-    Mirror_vertically();
+    //Mirror_vertically();
   }
   if (tgaHeader.ImageDescriptor & 0x10) {
     Mirror_horizontally();
@@ -124,7 +124,7 @@ TexturePixel Texture::Get(int x, int y) {
     //todo check if quiting is too extreme
     exit(-1);
   }
-  char * ptr = &texture_data[x + y * width];
+  char * ptr = &texture_data[bytesPerPixel * (x + y * width)];
   TexturePixel ret(ptr, bytesPerPixel) ;
   return ret;
 }
@@ -163,10 +163,10 @@ void Texture::Mirror_vertically() {
     TexturePixel p1 = Get(0, s);
     TexturePixel p2 = Get(0, height - (s+1));
 
-    memcpy(temp,p2.ptr,bytesPerPixel * width);
-    memcpy(p2.ptr,p1.ptr,bytesPerPixel * width);
-    memcpy(p1.ptr,temp,bytesPerPixel * width);
-
+    memmove(temp,p2.ptr,bytesPerPixel * width);
+    memmove(p2.ptr,p1.ptr,bytesPerPixel * width);
+    memmove(p1.ptr,temp,bytesPerPixel * width);
+    int c = 2;
   }
 
   free(temp);

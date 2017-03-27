@@ -21,6 +21,8 @@ int main(int argc, char* argv[] )
 	//model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
 	model.LoadObj("./Models/Diablo/diablo3_pose.obj");
   model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
+  model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
+	model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
 
 	bool debug = false;
 	bool show_screen = true;
@@ -38,7 +40,7 @@ int main(int argc, char* argv[] )
 
 	}
 
-	Camera camera(vec3(1,1,2));
+	Camera camera(vec3(1,1,4));
 	Lighting lighting(vec3(1,1,0), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
