@@ -1,7 +1,3 @@
-//
-// Created by John Griffith on 24/03/2017.
-//
-
 #ifndef COMPUTER_GRAPHICS_TGAIMAGE_H
 #define COMPUTER_GRAPHICS_TGAIMAGE_H
 

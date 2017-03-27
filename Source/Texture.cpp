@@ -60,13 +60,14 @@ bool Texture::ReadTGAImage(const char *filename) {
 
         count -= 127;
         char pixelInfo[4];
-
+				char * ptr;
         for (int b = 0; b < bytesPerPixel; b++) {
           pixelInfo[bytesPerPixel-b-1] = (char) stream.get();
+					ptr = &pixelInfo[b];
         }
 
         for (int item = 0; item < count; item++) {
-          memcpy(&texture_data[bytePtr], pixelInfo, bytesPerPixel);
+          memcpy(&texture_data[bytePtr], ptr, bytesPerPixel);
           bytePtr+=bytesPerPixel;
           pixel++;
           if (pixel>pixelCount) {
@@ -81,7 +82,7 @@ bool Texture::ReadTGAImage(const char *filename) {
           char pixelInfo[4];
 
           for (int b = 0; b < bytesPerPixel; b++) {
-            pixelInfo[bytesPerPixel-b-1] = (char) stream.get();
+            pixelInfo[b] = (char) stream.get();
           }
 
           memcpy(&texture_data[bytePtr], pixelInfo, bytesPerPixel);

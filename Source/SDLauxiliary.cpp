@@ -46,9 +46,9 @@ void PutPixelSDL( SDL_Surface* surface, int x, int y, glm::vec3 color )
 	if( x < 0 || surface->w <= x || y < 0 || surface->h <= y )
 		return;
 
-	Uint8 r = Uint8( glm::clamp( color.r, 0.f, 255.f ) );
+	Uint8 r = Uint8( glm::clamp( color.b, 0.f, 255.f ) );
 	Uint8 g = Uint8( glm::clamp( color.g, 0.f, 255.f ) );
-	Uint8 b = Uint8( glm::clamp( color.b, 0.f, 255.f ) );
+	Uint8 b = Uint8( glm::clamp( color.r, 0.f, 255.f ) );
 
 	Uint32* p = (Uint32*)surface->pixels + y*surface->pitch/4 + x;
 	*p = SDL_MapRGB( surface->format, r, g, b );

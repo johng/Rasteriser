@@ -41,7 +41,7 @@ int main(int argc, char* argv[] )
 	}
 
 	Camera camera(vec3(1,1,4));
-	Lighting lighting(vec3(1,1,0), vec3(1,1,1)*14.0f);
+	Lighting lighting(vec3(1,1,1), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
