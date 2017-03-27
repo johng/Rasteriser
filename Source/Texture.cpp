@@ -62,7 +62,7 @@ bool Texture::ReadTGAImage(const char *filename) {
         char pixelInfo[4];
 
         for (int b = 0; b < bytesPerPixel; b++) {
-          pixelInfo[b] = (char) stream.get();
+          pixelInfo[bytesPerPixel-b-1] = (char) stream.get();
         }
 
         for (int item = 0; item < count; item++) {
@@ -78,10 +78,16 @@ bool Texture::ReadTGAImage(const char *filename) {
       }else{
         count ++; //Encoding 1 less than actual. E.g start counting at 0
         for(int p = 0 ; p < count ; p ++) {
-          for(int c = 0 ; c < bytesPerPixel; c++){
-            texture_data[bytePtr++] = (char) stream.get();
+          char pixelInfo[4];
+
+          for (int b = 0; b < bytesPerPixel; b++) {
+            pixelInfo[bytesPerPixel-b-1] = (char) stream.get();
           }
+
+          memcpy(&texture_data[bytePtr], pixelInfo, bytesPerPixel);
+          bytePtr+=bytesPerPixel;
           pixel++;
+
           if (pixel>pixelCount) {
             std::cerr << "Too many pixels read\n";
             return false;

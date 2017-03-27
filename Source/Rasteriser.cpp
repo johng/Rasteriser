@@ -64,13 +64,13 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
   TexturePixel diffuse = r->model->diffuseTexture(textureCoordInterp);
 
-  vec3 c ((int)diffuse.ptr[0],(int)diffuse.ptr[1],(int)diffuse.ptr[2]);
+  vec3 c (diffuse.ptr[0],diffuse.ptr[1],diffuse.ptr[2]);
 
   if(idx >= 0 && idx < r->width*r->height) {
 
     float shadow = 0.2f + 0.7f * (r->depthBufferLight[idx] < (p[2] + 44));
 
-    for (int i=0; i<3; i++) colour[i] =  15.f + c[i] * shadow;
+    for (int i=0; i<3; i++) colour[i] =  c[i] ;
     //for (int i=0; i<3; i++) colour[i] = std::min<float>(20.0f + c[i]*shadow*( 0.6* spec+ 0.4*diff), 255);
 
 
