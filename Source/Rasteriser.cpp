@@ -59,25 +59,24 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
 	vec3 vv = vec3( normal*mm);
 	vec3 n =  normalize( vv);
-  vec3 ll =  vec4(r->light_pos,1) * modelView ;  // light vector
+  vec3 ll =  vec4(r->light_pos,1) * modelView ;
   vec3 l = normalize(ll);
 	float ttt = glm::dot(n,l)*2.0f;
-	vec3 tt = n*ttt - l;   // reflected light
+	vec3 tt = n*ttt - l;
 	vec3 ref = normalize(tt);
   float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
-	//cout << r->model->specularTexture(textureCoordInterp) << endl;
   float diff = std::max<float>(0.f, glm::dot(n,l));
 
-  TexturePixel diffuse = r->model->diffuseTexture(textureCoordInterp);
+  unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
-  vec3 c (diffuse.ptr[0],diffuse.ptr[1],diffuse.ptr[2]);
+  vec3 c ((int)diffuse[0],(int)diffuse[1],(int)diffuse[2]);
 
   if(idx >= 0 && idx < r->width*r->height) {
 
     float shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < p[2] + 20);
 
     //for (int i=0; i<3; i++) colour[i] =  c[i] ;
-    for (int i=0; i<3; i++) colour[i] = std::min<float>(20.0f + c[i]*shadow*( 0.6f* spec+ 1.2f*diff), 255);
+    for (int i=0; i<3; i++) colour[i] = std::min<float>(20.0f + c[i]*shadow*( 0.6f* spec+ 1.0f*diff), 255);
 
 
     //colour = intensity * std::min<float>(shadow, 1) * cc ;

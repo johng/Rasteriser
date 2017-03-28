@@ -124,25 +124,25 @@ int Model::triangleCount() {
   return triangles.size();
 }
 
-TexturePixel Model::diffuseTexture(vec2 textureCoordinate) {
+unsigned char * Model::diffuseTexture(vec2 textureCoordinate) {
   ivec2 coordinate(textureCoordinate.x * diffuse.GetWidth(), textureCoordinate.y * diffuse.GetHeight());
   return diffuse.Get(coordinate[0],coordinate[1]);
 }
 
 vec3 Model::normalMapTexture(vec2 textureCoordinate){
   ivec2 coordinate(textureCoordinate.x * normal.GetWidth(), textureCoordinate.y * normal.GetHeight());
-  TexturePixel c = normal.Get(coordinate[0],coordinate[1]);
+  unsigned char * c = normal.Get(coordinate[0],coordinate[1]);
   vec3 res;
-  for (int i=0; i<3; i++)
-    res[2-i] = ((int)c.ptr[i])/255.f*2.f - 1.f;
-
+  for (int i=0; i<3; i++) {
+    res[2-i] = ((int) c[i]) / 255.f * 2.f - 1.f;
+  }
   return res;
 }
 
 
 float Model::specularTexture(vec2 textureCoordinate){
   ivec2 coordinate(textureCoordinate.x * specular.GetWidth(), textureCoordinate.y * specular.GetHeight());
-  return ((int)(specular.Get(coordinate[0],coordinate[1]).ptr[0]))/1.0f;
+  return (float)(specular.Get(coordinate[0],coordinate[1])[0]);
 }
 
 

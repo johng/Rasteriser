@@ -28,7 +28,7 @@ public:
     glm::vec3 normalCoodinate(int triangle, int index);
     glm::vec2 textureCoordinate(int triangle, int index);
 
-    TexturePixel diffuseTexture(glm::vec2 textureCoordinate);
+    unsigned char * diffuseTexture(glm::vec2 textureCoordinate);
     glm::vec3 normalMapTexture(glm::vec2 textureCoordinate);
     float specularTexture(glm::vec2 textureCoordinate);
 };

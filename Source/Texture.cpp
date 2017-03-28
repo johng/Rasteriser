@@ -8,10 +8,6 @@
 
 using namespace std;
 
-TexturePixel::TexturePixel( unsigned char * ptr, char size){
-  this->ptr = ptr;
-  this->size = size;
-}
 
 
 bool Texture::ReadTGAImage(const char *filename) {
@@ -59,10 +55,10 @@ bool Texture::ReadTGAImage(const char *filename) {
       if(count > 127) {
 
         count -= 127;
-        char pixelInfo[4];
-				char * ptr;
+        unsigned char pixelInfo[4];
+				unsigned char * ptr;
         for (int b = 0; b < bytesPerPixel; b++) {
-          pixelInfo[bytesPerPixel-b-1] = (char) stream.get();
+          pixelInfo[bytesPerPixel-b-1] = (unsigned char) stream.get();
 					ptr = &pixelInfo[b];
         }
 
@@ -79,10 +75,10 @@ bool Texture::ReadTGAImage(const char *filename) {
       }else{
         count ++; //Encoding 1 less than actual. E.g start counting at 0
         for(int p = 0 ; p < count ; p ++) {
-          char pixelInfo[4];
+          unsigned char pixelInfo[4];
 
           for (int b = 0; b < bytesPerPixel; b++) {
-            pixelInfo[b] = (char) stream.get();
+            pixelInfo[b] = (unsigned char) stream.get();
           }
 
           memcpy(&texture_data[bytePtr], pixelInfo, bytesPerPixel);
@@ -124,33 +120,31 @@ int Texture::GetWidth(){
 };
 
 
-TexturePixel Texture::Get(int x, int y) {
+unsigned char * Texture::Get(int x, int y) {
 
   if(x < 0 || x >= width || y < 0 || y >=height){
     cout << "Invalid pixel coordinate!" << endl;
     //todo check if quiting is too extreme
     exit(-1);
   }
-  unsigned char * ptr = &texture_data[bytesPerPixel * (x + y * width)];
-  TexturePixel ret(ptr, bytesPerPixel) ;
-  return ret;
+  return &texture_data[bytesPerPixel * (x + y * width)];
 }
 
 
 void Texture::Mirror_horizontally() {
 
   int swaps = width>>1; //Divide by 2, ensuring we round down
-  char* temp = (char*)malloc(bytesPerPixel);
+  unsigned char* temp = (unsigned char*)malloc(bytesPerPixel);
 
   for(int h =0; h< height; h++) {
     for (int s = 0; s < swaps; s++) {
 
-      TexturePixel p1 = Get(s, h);
-      TexturePixel p2 = Get(width - (s+1), h);
+      unsigned char * p1 = Get(s, h);
+      unsigned char * p2 = Get(width - (s+1), h);
 
-      memcpy(temp,p1.ptr,bytesPerPixel);
-      memcpy(p1.ptr,p2.ptr,bytesPerPixel);
-      memcpy(p2.ptr,p1.ptr,bytesPerPixel);
+      memcpy(temp,p1,bytesPerPixel);
+      memcpy(p1,p2,bytesPerPixel);
+      memcpy(p2,p1,bytesPerPixel);
 
     }
   }
@@ -164,15 +158,15 @@ void Texture::Mirror_vertically() {
 
   int swaps = height>>1; //Divide by 2, ensuring we round down
 
-  char* temp = (char*)malloc(width * bytesPerPixel);
+  unsigned char* temp = (unsigned char*)malloc(width * bytesPerPixel);
   for(int s = 0; s < swaps; s++){
 
-    TexturePixel p1 = Get(0, s);
-    TexturePixel p2 = Get(0, height - (s+1));
+    unsigned char * p1 = Get(0, s);
+    unsigned char * p2 = Get(0, height - (s+1));
 
-    memmove(temp,p2.ptr,bytesPerPixel * width);
-    memmove(p2.ptr,p1.ptr,bytesPerPixel * width);
-    memmove(p1.ptr,temp,bytesPerPixel * width);
+    memmove(temp,p2,bytesPerPixel * width);
+    memmove(p2,p1,bytesPerPixel * width);
+    memmove(p1,temp,bytesPerPixel * width);
     int c = 2;
   }
 

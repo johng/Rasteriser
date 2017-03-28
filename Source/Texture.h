@@ -24,14 +24,6 @@ struct TGAHeader
 		uint8_t ImageDescriptor;
 } ;
 
-struct TexturePixel {
-    unsigned char * ptr;
-    char size ;
-    TexturePixel( unsigned char * ptr, char size);
-};
-
-
-
 
 class Texture {
 
@@ -48,7 +40,7 @@ public:
 		int GetHeight();
     void Mirror_horizontally();
     void Mirror_vertically();
-    TexturePixel Get(int x, int y);
+    unsigned char * Get(int x, int y);
 
 };
 
