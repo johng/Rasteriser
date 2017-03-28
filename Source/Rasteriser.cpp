@@ -38,6 +38,7 @@ vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
   vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
+    //Projecting the triangle into screen space
     tri[i][index] = retval[i]/retval.w;
   }
   t_index = triangle_index;
@@ -113,10 +114,13 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 
 void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, bool draw_screen) {
 
-  vec4 v0 = vetex[0];
-  vec4 v1 = vetex[1];
-  vec4 v2 = vetex[2];
 
+  mat4 m = inverse( modelView * projection * viewPort) ;
+
+  mat4 mm = transpose(modelView );
+  vec4 v0 = vetex[0]  ;
+  vec4 v1 = vetex[1] ;
+  vec4 v2 = vetex[2] ;
 
 
   vec2 bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
@@ -129,62 +133,47 @@ void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, b
   }
 
 
-  //todo bounding box
-  for (int x=bboxmin.x; x<=bboxmax.x; x++) {
-    for (int y=bboxmin.y; y<=bboxmax.y; y++) {
-
-      vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
-                           vec2(v1.x/v1.w,v1.y/v1.w),
-                           vec2(v2.x/v2.w,v2.y/v2.w),
-                           vec2(x,y));
-      float z = v0.z*c.x + v1.z*c.y + v2.z*c.z;
-      float w = v0.w*c.x + v1.w*c.y + v2.w*c.z;
-      int frag_depth = z/w;
-
-
-      if (c.x<0 || c.y<0 || c.z<0 || z_buffer[x+y*width]>frag_depth) continue;
-      vec3 colour;
-      shader.fragment(c, colour);
-      z_buffer[x+y*width] = frag_depth;
-      if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
-    }
-  }
-
   //todo integrate this with the code above
-  /*
+
+
+
   //Matrix of vertices
-  mat3 M(v0_dash, v1_dash, v2_dash);
+  mat3 M(v0, v1, v2);
 
   mat3 M_i = glm::inverse(M);
 
   vec3 w = vec3(1, 1, 1) * M_i;
 
 
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      vec3 p = getPoint(x, y, width, height);
-      //vec3 p(x,y,1);
+for (int x=bboxmin.x; x<=bboxmax.x; x++) {
+  for (int y=bboxmin.y; y<=bboxmax.y; y++) {
+
+      //vec3 p = getPoint(x, y);
+      vec3 p(x,y,1);
       vec3 E = M_i * p;
       //Check all edge functions
-
+      //cout << to_string(E.z) << endl;
       if (E.x >= 0 &&
           E.y >= 0 &&
           E.z >= 0) {
 
-        //cout << E.x << "," << E.y << "," << E.z << "\n";
+          vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
+                               vec2(v1.x/v1.w,v1.y/v1.w),
+                               vec2(v2.x/v2.w,v2.y/v2.w),
+                               vec2(x,y));
+          float z = v0.z*c.x + v1.z*c.y + v2.z*c.z;
+          float w = v0.w*c.x + v1.w*c.y + v2.w*c.z;
+          int frag_depth = z/w;
+          if (c.x<0 || c.y<0 || c.z<0 || z_buffer[x+y*width]>frag_depth) continue;
+          vec3 colour;
+          shader.fragment(c, colour);
+          z_buffer[x+y*width] = frag_depth;
+          if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
 
-        float W = 1 / glm::dot(w, p);
-
-        vec3 colour = t.color;
-
-        if (z_buffer[C(x, y, width, height)] > W) {
-            PutPixelSDL( screen, x, y, colour );
-            z_buffer[C(x, y, width, height)] = W;
-        }
       }
     }
   }
-  */
+
 }
 
 void Rasteriser::Projection(float coeff) {

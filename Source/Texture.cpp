@@ -123,9 +123,8 @@ int Texture::GetWidth(){
 unsigned char * Texture::Get(int x, int y) {
 
   if(x < 0 || x >= width || y < 0 || y >=height){
-    cout << "Invalid pixel coordinate!" << endl;
-    //todo check if quiting is too extreme
-    exit(-1);
+    unsigned char c = 0;
+    return &c; //Bit of a hack, so we can return nothing when we don't have the textures
   }
   return &texture_data[bytesPerPixel * (x + y * width)];
 }
@@ -167,7 +166,6 @@ void Texture::Mirror_vertically() {
     memmove(temp,p2,bytesPerPixel * width);
     memmove(p2,p1,bytesPerPixel * width);
     memmove(p1,temp,bytesPerPixel * width);
-    int c = 2;
   }
 
   free(temp);
