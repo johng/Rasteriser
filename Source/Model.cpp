@@ -14,6 +14,7 @@ bool Model::LoadObj(const char * filename)
 
   std::ifstream ifs(filename);
   std::string line;
+
   while (std::getline(ifs, line))
   {
     std::istringstream ss(line);
@@ -78,7 +79,10 @@ bool Model::LoadObj(const char * filename)
       Triangle triangle (v[0],v[1],v[2]);
       triangles.push_back(triangle);
     }
+
+    ifs.ignore();
   }
+
 }
 
 
