@@ -44,7 +44,6 @@ vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
   t_index = triangle_index;
   return retval;
 }
-
 bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
   vec4 p = vec4(bar*tri,1) * screen_shadow ;
@@ -68,16 +67,16 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
   float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
   float diff = std::max<float>(0.f, glm::dot(n,l));
 
-  unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
-  vec3 c ((int)diffuse[0],(int)diffuse[1],(int)diffuse[2]);
+
+	unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
   if(idx >= 0 && idx < r->width*r->height) {
 
     float shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < p[2] + 20);
 
     //for (int i=0; i<3; i++) colour[i] =  c[i] ;
-    for (int i=0; i<3; i++) colour[i] = std::min<float>(20.0f + c[i]*shadow*( 0.6f* spec+ 1.0f*diff), 255);
+    for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*( 0.6f* spec+ 1.0f*diff), 255);
 
 
     //colour = intensity * std::min<float>(shadow, 1) * cc ;
@@ -90,7 +89,7 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
 
 Rasteriser::Rasteriser(SDL_Surface *screen,Model * model) : Renderer(screen), model(model) {
-  this->depth = 2000.f;
+  this->depth = 1000;
 	this->screen = screen;
 	this->width = screen->w;
 	this->height = screen->h;
@@ -153,24 +152,22 @@ for (int x=bboxmin.x; x<=bboxmax.x; x++) {
       vec3 E = M_i * p;
       //Check all edge functions
       //cout << to_string(E.z) << endl;
-      if (E.x >= 0 &&
-          E.y >= 0 &&
-          E.z >= 0) {
 
-          vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
-                               vec2(v1.x/v1.w,v1.y/v1.w),
-                               vec2(v2.x/v2.w,v2.y/v2.w),
-                               vec2(x,y));
-          float z = v0.z*c.x + v1.z*c.y + v2.z*c.z;
-          float w = v0.w*c.x + v1.w*c.y + v2.w*c.z;
-          int frag_depth = z/w;
-          if (c.x<0 || c.y<0 || c.z<0 || z_buffer[x+y*width]>frag_depth) continue;
-          vec3 colour;
-          shader.fragment(c, colour);
-          z_buffer[x+y*width] = frag_depth;
-          if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
 
-      }
+			vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
+													 vec2(v1.x/v1.w,v1.y/v1.w),
+													 vec2(v2.x/v2.w,v2.y/v2.w),
+													 vec2(x,y));
+			float z = v0.z*c.x + v1.z*c.y + v2.z*c.z;
+			float w = v0.w*c.x + v1.w*c.y + v2.w*c.z;
+			int frag_depth = z/w;
+			if (c.x<0 || c.y<0 || c.z<0 || z_buffer[x+y*width]>frag_depth) continue;
+			vec3 colour;
+			shader.fragment(c, colour);
+			z_buffer[x+y*width] = frag_depth;
+			if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
+
+
     }
   }
 
@@ -265,6 +262,7 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
     }
     DrawPolygon( vetex, shadowShader,depthBufferCamera , true );
   }
+
 
   if (SDL_MUSTLOCK(screen)) {
     SDL_UnlockSurface(screen);

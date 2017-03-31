@@ -19,10 +19,18 @@ int main(int argc, char* argv[] )
 
 	Model model;
 	//model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
+
+
+
 	model.LoadObj("./Models/Diablo/diablo3_pose.obj");
   model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
   model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
 	model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
+
+
+
+	//model.LoadObj("/Users/johng/Downloads/bunny/bunny.obj");
+	//model.LoadDiffuseTexture("/Users/johng/Downloads/bunny/bunny-atlas.tga");
 
 	bool debug = false;
 	bool show_screen = true;
@@ -69,7 +77,7 @@ int main(int argc, char* argv[] )
 	return 0;
 }
 
-
+int xx = 0;
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 {
 	// Compute frame time:
@@ -112,15 +120,22 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	if( keystate[SDLK_a] )
 	{
 		// Move camera to the left
-		camera.move(right);
+		xx -= delta_move;
 	}
 	if( keystate[SDLK_d] )
 	{
 		// Move camera to the right
-		camera.move(-right);
+		xx += delta_move;
+
+
+
+
+
 	}
 
+	float x = sin(xx);
 
+	camera.movex(x)
 
 	if( keystate[SDLK_UP] )
 	{
