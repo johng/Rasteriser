@@ -77,7 +77,7 @@ int main(int argc, char* argv[] )
 	return 0;
 }
 
-int xx = 0;
+float xx = 0;
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 {
 	// Compute frame time:
@@ -110,17 +110,18 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	if( keystate[SDLK_w] )
 	{
 		// Move camera forward
-		camera.move(-down);
+		//camera.move(-down);
 	}
 	if( keystate[SDLK_s] )
 	{
 		// Move camera backward
-		camera.move(down);
+		//camera.move(down);
 	}
 	if( keystate[SDLK_a] )
 	{
 		// Move camera to the left
 		xx -= delta_move;
+
 	}
 	if( keystate[SDLK_d] )
 	{
@@ -128,14 +129,12 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 		xx += delta_move;
 
 
-
-
-
 	}
 
-	float x = sin(xx);
-
-	camera.movex(x)
+	float x = sin(xx) * 3 ;
+	float y = cos(xx) * 3;
+	cout << x << "\n";
+	camera.set(vec3(x,0.5,y));
 
 	if( keystate[SDLK_UP] )
 	{
