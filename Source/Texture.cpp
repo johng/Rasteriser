@@ -58,12 +58,12 @@ bool Texture::ReadTGAImage(const char *filename) {
         unsigned char pixelInfo[4];
 				unsigned char * ptr;
         for (int b = 0; b < bytesPerPixel; b++) {
-          pixelInfo[bytesPerPixel-b-1] = (unsigned char) stream.get();
+          pixelInfo[b] = (unsigned char) stream.get();
 					ptr = &pixelInfo[b];
         }
 
         for (int item = 0; item < count; item++) {
-          memcpy(&texture_data[bytePtr], ptr, bytesPerPixel);
+          memcpy(&texture_data[bytePtr], pixelInfo, bytesPerPixel);
           bytePtr+=bytesPerPixel;
           pixel++;
           if (pixel>pixelCount) {
@@ -124,6 +124,7 @@ unsigned char * Texture::Get(int x, int y) {
 
   if(x < 0 || x >= width || y < 0 || y >=height){
     unsigned char c = 0;
+		cout << "ERROR!"  << x << "," << y <<"\n";
     return &c; //Bit of a hack, so we can return nothing when we don't have the textures
   }
   return &texture_data[bytesPerPixel * (x + y * width)];
