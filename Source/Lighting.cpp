@@ -10,6 +10,11 @@ void Lighting::move (vec3 movement)
   pos += movement;
 }
 
+void Lighting::set (vec3 p)
+{
+  pos = p;
+}
+
 vec3 Lighting::position() {
   return pos;
 }

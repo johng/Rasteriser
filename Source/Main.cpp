@@ -77,7 +77,13 @@ int main(int argc, char* argv[] )
 	return 0;
 }
 
-float xx = 0;
+float xx_camera = 0;
+float yy_camera = 0;
+
+float xx_light = 0;
+float yy_light = 0;
+
+float r_camera = 3;
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 {
 	// Compute frame time:
@@ -110,54 +116,63 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	if( keystate[SDLK_w] )
 	{
 		// Move camera forward
-		//camera.move(-down);
+		yy_camera += delta_move;
 	}
 	if( keystate[SDLK_s] )
 	{
 		// Move camera backward
-		//camera.move(down);
+    yy_camera -= delta_move;
 	}
 	if( keystate[SDLK_a] )
 	{
 		// Move camera to the left
-		xx -= delta_move;
+		xx_camera -= delta_move ;
 
 	}
 	if( keystate[SDLK_d] )
 	{
 		// Move camera to the right
-		xx += delta_move;
-
-
+		xx_camera += delta_move;
 	}
 
-	float x = sin(xx) * 3 ;
-	float y = cos(xx) * 3;
-	cout << x << "\n";
-	camera.set(vec3(x,0.5,y));
+	float x = sin(xx_camera) * 20 ;
+  float z = cos(xx_camera) * 20 ;
+  float y = sin(yy_camera) * 20;
+
+	camera.set(vec3(x,yy_camera,z));
 
 	if( keystate[SDLK_UP] )
 	{
 		// Move camera forward
-		lighting.move(-down);
+		yy_light += delta_move;
 	}
 	if( keystate[SDLK_DOWN] )
 	{
 		// Move camera backward
-		lighting.move(down);
+    yy_light -= delta_move;
 	}
 	if( keystate[SDLK_RIGHT] )
 	{
 		// Move camera to the left
-		lighting.move(right);
+		xx_light += delta_move;
 	}
 	if( keystate[SDLK_LEFT] )
 	{
 		// Move camera to the right
-		lighting.move(-right);
+    xx_light -= delta_move;
 	}
 
-	if( keystate[SDLK_ESCAPE] )
+
+
+  x = sin(xx_light) * 20 ;
+  z = cos(xx_light) * 20 ;
+  y = sin(yy_light) * 20;
+
+  lighting.set(vec3(x,yy_camera,z));
+
+
+
+  if( keystate[SDLK_ESCAPE] )
 	{
 		//Quit
 		return false;

@@ -19,6 +19,7 @@ private:
 public:
 		Lighting(vec3 pos, vec3 col);
 		void move(vec3 m);
+		void set(vec3 m);
 		vec3 position();
 		vec3 colour();
 		friend ostream& operator<<(ostream& os, const Lighting& light);
