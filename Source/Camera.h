@@ -24,6 +24,7 @@ public:
     Camera (vec3 pos);
 
     void move (vec3 move);
+		void set(vec3 pos);
     void rotate (float, float);
     vec3 position();
     friend ostream& operator<<(ostream& os, const Camera& cam);

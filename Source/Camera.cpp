@@ -12,6 +12,10 @@ void Camera::move (vec3 movement)
 	//inv = glm::inverse(pos);
 }
 
+void Camera::set(vec3 p){
+	pos = p;
+}
+
 void Camera::rotate (float pitch, float yaw)
 {
 	R_x *= mat3(1, 0, 0,  // 1. column
