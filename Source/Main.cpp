@@ -58,7 +58,7 @@ int main(int argc, char* argv[] )
 	//SDL_WM_GrabInput( SDL_GRAB_ON );
 	//SDL_ShowCursor(0);
 
-	Rasteriser r (screen, &model) ;
+	Rasteriser r (screen, &model,camera,lighting) ;
 
 	//A bit of a hack to flush initial events
 	SDL_Event e;
@@ -67,11 +67,11 @@ int main(int argc, char* argv[] )
 	if(show_screen) {
 		while (NoQuitMessageSDL()) {
 			ProcessInput(t, camera, lighting , debug);
-			r.Draw(camera, lighting);
+			r.Draw();
 		}
 	}else{
 
-		r.Draw(camera, lighting);
+		r.Draw();
 	}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
 	return 0;
@@ -83,7 +83,7 @@ float yy_camera = 0;
 float xx_light = 0;
 float yy_light = 0;
 
-float r_camera = 3;
+float r_camera = 30;
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 {
 	// Compute frame time:

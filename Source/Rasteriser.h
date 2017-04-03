@@ -17,15 +17,16 @@ class Rasteriser : Renderer {
 
 
 public:
-		Rasteriser(SDL_Surface *screen, Model * model);
-		void Draw(Camera &camera,Lighting &lighting);
+		Rasteriser(SDL_Surface *screen, Model * model,Camera &camera,Lighting &lighting);
+		void Draw();
 
 protected:
     vec3 light_pos;
     vec3 camera_pos;
     vec3 light_colour;
+		Camera &camera;
+		Lighting &lighting;
     Model * model;
-
 private:
 
 		float * depthBufferCamera;
@@ -37,7 +38,7 @@ private:
 		void ViewPort(int x, int y, int w, int h);
     void Projection(float c);
     vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P);
-
+		void Clip(vec4 vetex[3]);
 		struct DepthShader: Shader {
 				Rasteriser *r;
 				mat3 tri;

@@ -88,7 +88,7 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 }
 
 
-Rasteriser::Rasteriser(SDL_Surface *screen,Model * model) : Renderer(screen), model(model) {
+Rasteriser::Rasteriser(SDL_Surface *screen,Model * model,Camera &camera,Lighting &lighting) : Renderer(screen), model(model), camera(camera ), lighting(lighting) {
   this->depth = 1000;
 	this->screen = screen;
 	this->width = screen->w;
@@ -106,20 +106,21 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
     s[i][2] = A[i]-P[i];
   }
   vec3 u = cross(s[0], s[1]);
-  if (std::abs(u[2])>1e-2) // dont forget that u[2] is integer. If it is zero then triangle ABC is degenerate
-    return vec3(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
-  return vec3(-1,1,1); // in this case generate negative coordinates, it will be thrown away by the rasterizator
+  if (std::abs(u[2])>1e-2){
+		//u.z is the area of all 3 vertices
+		//Divide this by the are of two vertices and the test point to get baycentric value
+		return vec3(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
+	}
+
+  return vec3(-1,1,1);
 }
 
 void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, bool draw_screen) {
 
 
-  mat4 m = inverse( modelView * projection * viewPort) ;
-
-  mat4 mm = transpose(modelView );
-  vec4 v0 = vetex[0]  ;
-  vec4 v1 = vetex[1] ;
-  vec4 v2 = vetex[2] ;
+	vec4 v0 = vetex[0] ;
+	vec4 v1 = vetex[1] ;
+	vec4 v2 = vetex[2] ;
 
 
   vec2 bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
@@ -131,28 +132,11 @@ void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, b
     }
   }
 
-
   //todo integrate this with the code above
-
-
-
-  //Matrix of vertices
-  mat3 M(v0, v1, v2);
-
-  mat3 M_i = glm::inverse(M);
-
-  vec3 w = vec3(1, 1, 1) * M_i;
 
 
 for (int x=bboxmin.x; x<=bboxmax.x; x++) {
   for (int y=bboxmin.y; y<=bboxmax.y; y++) {
-
-      //vec3 p = getPoint(x, y);
-      vec3 p(x,y,1);
-      vec3 E = M_i * p;
-      //Check all edge functions
-      //cout << to_string(E.z) << endl;
-
 
 			vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
 													 vec2(v1.x/v1.w,v1.y/v1.w),
@@ -167,10 +151,8 @@ for (int x=bboxmin.x; x<=bboxmax.x; x++) {
 			z_buffer[x+y*width] = frag_depth;
 			if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
 
-
-    }
-  }
-
+		}
+	}
 }
 
 void Rasteriser::Projection(float coeff) {
@@ -205,7 +187,34 @@ void Rasteriser::ViewPort(int x, int y, int w, int h){
   viewPort[2][2] = depth/2.f;
 }
 
-void Rasteriser::Draw(Camera &camera,Lighting &lighting)
+
+void Rasteriser::Clip(vec4 vertex[3]){
+
+	for(int i = 0 ; i < 3; i++) {
+
+		if (vertex[0].x > width * vertex[0].w) {
+			vertex[0].x = width * vertex[0].w ;
+		}
+
+		if (vertex[i].y > height * vertex[0].w) {
+			vertex[i].y = height * vertex[0].w ;
+		}
+
+		if (vertex[i].y < 0) {
+			vertex[i].y = 0 ;
+		}
+
+
+		if (vertex[i].x < 0) {
+			vertex[i].x = 0 ;
+		}
+
+
+
+	}
+}
+
+void Rasteriser::Draw()
 {
 
   SDL_FillRect( screen, 0, 0 );
@@ -244,6 +253,11 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
 
   for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
+
+
+
+
+
       vetex[j] = depthShader.proj(i,j);
     }
     DrawPolygon( vetex, depthShader  , depthBufferLight , false );
@@ -259,7 +273,14 @@ void Rasteriser::Draw(Camera &camera,Lighting &lighting)
   for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       vetex[j] = shadowShader.proj(i,j);
+
+
+
+
+
     }
+
+
     DrawPolygon( vetex, shadowShader,depthBufferCamera , true );
   }
 
