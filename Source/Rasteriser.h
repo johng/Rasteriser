@@ -38,7 +38,7 @@ private:
 		void ViewPort(int x, int y, int w, int h);
     void Projection(float c);
     vec3 barycentric(vec2 A, vec2 B, vec2 C, vec2 P);
-		void Clip(vec4 vetex[3]);
+		void Clip(vec4 vetex[3], vec4 ** clipped, int * count);
 		struct DepthShader: Shader {
 				Rasteriser *r;
 				mat3 tri;

@@ -215,28 +215,29 @@ inline vec4 intersection(vec4 a, vec4 b, vec4 c , vec4 d){
 	return a + l*(b-a);
 }
 
-void Rasteriser::Clip(vec4 in_list[3]) {
+void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 
 
 	vec2 clip_edge [4] = { vec2(0,0), vec2(0,height) ,
 		vec2(width, height), vec2 (width,0)
 	};
 
-
-	vec4 inList[10];
+	//todo remove mallocs from function call
+	vec4 * inList = (vec4*)malloc(sizeof(vec4) * 10);
 	int inListCount = 0;
 
 	for(int i = 0 ; i < 3 ; i++){
-		inList[inListCount++] = in_list[i];
+		inList[inListCount++] = vertex[i];
 	}
 
+	vec4 * outList = (vec4*)malloc(sizeof(vec4) * 10);
+	vec4 * temp;
 
-	vec4 outList[10];
 	int outListCount = 0;
 
 	for(int clip = 0; clip < 4 ; clip++){
 
-		int next_clip = clip + 1 % 4;
+		int next_clip = (clip + 1) % 4;
 		vec2 vecClip = clip_edge[next_clip] - clip_edge[clip];
 		outListCount = 0;
 
@@ -247,35 +248,34 @@ void Rasteriser::Clip(vec4 in_list[3]) {
 			bool in_current = rhs(clip_edge[clip],clip_edge[next_clip],inList[inVertexPtr]);
 			bool in_next = rhs(clip_edge[clip],clip_edge[next_clip],inList[nextVertexPtr]);
 
-
-			vec4 a(0,0,0,0);
-			vec4 b(0,1,0,0);
-			vec4 c(-10,20,0,0);
-			vec4 d(100,200,0,0);
-			vec4 intersect = intersection(a,b,c,d);
-			cout << "I: " << intersect.x << "," << intersect.y << "\n";
-
-
 			if(in_current && in_next){
-				outList[outListCount++] = inList[inVertexPtr];
+				outList[outListCount++] = inList[nextVertexPtr];
 				continue;
 			}else if (!in_current && !in_next){
 				continue;
 			}
 
+			vec4 intersect = intersection(inList[inVertexPtr],inList[nextVertexPtr]
+							,vec4(clip_edge[clip],0,0),vec4(clip_edge[next_clip],0,0));
 
-
-
-
-
-
-
-		 	//For now don't interpolate
-
-			int hha = 2;
-
+			if(in_current && !in_next){
+				outList[outListCount++] = intersect;
+			}else if(!in_current && in_next){
+				outList[outListCount++] = intersect;
+				outList[outListCount++] = inList[nextVertexPtr] ;
+			}
 		}
+
+		temp = inList;
+		inList = outList;
+		outList = temp;
+		inListCount = outListCount;
 	}
+
+
+	*count = inListCount;
+	*clipped = inList;
+	int a =0;
 }
 
 void Rasteriser::Draw()
@@ -315,17 +315,29 @@ void Rasteriser::Draw()
 
   int renderCount = model->triangleCount();
 
+
+
+	vec4 verticies[3] = {
+
+					vec4 (1,1,0,0),
+					vec4 (-10,1,0,0),
+					vec4 (-10,-100,0,0)
+
+	};
+
+	vec4 * outlist = (vec4*)malloc(sizeof(vec4)*20);
+	int count;
+	Clip(verticies,&outlist,&count);
+
+
   for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
-
-
-
-
-
       vetex[j] = depthShader.proj(i,j);
     }
 
-		Clip(vetex);
+		vec4 * outlist = (vec4*)malloc(sizeof(vec4)*20);
+		int count;
+		Clip(vetex,&outlist,&count);
 
 	}
 
@@ -340,12 +352,7 @@ void Rasteriser::Draw()
     for(int j = 0; j < 3 ;j++){
       vetex[j] = shadowShader.proj(i,j);
 
-
-
-
-
     }
-		Clip(vetex);
 
   }
 
