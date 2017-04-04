@@ -188,29 +188,77 @@ void Rasteriser::ViewPort(int x, int y, int w, int h){
 }
 
 
-void Rasteriser::Clip(vec4 vertex[3]){
+const int INSIDE = 0; // 0000
+const int LEFT = 1;   // 0001
+const int RIGHT = 2;  // 0010
+const int BOTTOM = 4; // 0100
+const int TOP = 8;    // 1000
 
-	for(int i = 0 ; i < 3; i++) {
 
-		if (vertex[0].x > width * vertex[0].w) {
-			vertex[0].x = width * vertex[0].w ;
+
+inline float cross (vec2 a , vec2 b){
+	return a.x * b.y - a.y * b.x;
+}
+
+
+inline bool rhs(vec2 a, vec2 b, vec2 p){
+
+	vec2 t1, t2;
+	t1 = b -a;
+	t2 = p -b;
+	float x = cross(t1,t2);
+	return x < 0;
+}
+
+void Rasteriser::Clip(vec4 in_list[3]) {
+
+
+	vec2 clip_edge [4] = { vec2(0,0), vec2(0,height) ,
+		vec2(width, height), vec2 (width,0)
+	};
+
+
+	vec4 inList[10];
+	int inListCount = 0;
+
+	for(int i = 0 ; i < 3 ; i++){
+		inList[inListCount++] = in_list[i];
+	}
+
+
+	vec4 outList[10];
+	int outListCount = 0;
+
+	for(int clip = 0; clip < 4 ; clip++){
+
+		int next_clip = clip + 1 % 4;
+		vec2 vecClip = clip_edge[next_clip] - clip_edge[clip];
+		outListCount = 0;
+
+		for (int inVertexPtr = 0; inVertexPtr < inListCount ; inVertexPtr++)
+		{
+			int nextVertexPtr = (inVertexPtr + 1) % inListCount;
+
+			bool in_current = rhs(clip_edge[clip],clip_edge[next_clip],inList[inVertexPtr]);
+			bool in_next = rhs(clip_edge[clip],clip_edge[next_clip],inList[nextVertexPtr]);
+
+			if(in_current && in_next){
+				outList[outListCount++] = inList[inVertexPtr];
+				continue;
+			}else if (!in_current && !in_next){
+				continue;
+			}
+
+
+			vec2 diffAB = vec2(inList[inVertexPtr]) - clip_edge[clip];
+			vec2 diffVec = vec2(inList[nextVertexPtr] - inList[inVertexPtr]);
+			float a = cross(diffAB, vecClip) / cross(diffVec,vecClip);
+
+			vec4 intersection = inList[inVertexPtr] +a * vec4(diffVec,0,0) ;//For now don't interpolate
+
+			int hha = 2;
+
 		}
-
-		if (vertex[i].y > height * vertex[0].w) {
-			vertex[i].y = height * vertex[0].w ;
-		}
-
-		if (vertex[i].y < 0) {
-			vertex[i].y = 0 ;
-		}
-
-
-		if (vertex[i].x < 0) {
-			vertex[i].x = 0 ;
-		}
-
-
-
 	}
 }
 
@@ -260,7 +308,9 @@ void Rasteriser::Draw()
 
       vetex[j] = depthShader.proj(i,j);
     }
-    DrawPolygon( vetex, depthShader  , depthBufferLight , false );
+
+		Clip(vetex);
+
 	}
 
   LookAt(camera_pos, center, up);
@@ -279,9 +329,8 @@ void Rasteriser::Draw()
 
 
     }
+		Clip(vetex);
 
-
-    DrawPolygon( vetex, shadowShader,depthBufferCamera , true );
   }
 
 
