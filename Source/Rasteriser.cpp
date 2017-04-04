@@ -202,12 +202,17 @@ inline float cross (vec2 a , vec2 b){
 
 
 inline bool rhs(vec2 a, vec2 b, vec2 p){
-
 	vec2 t1, t2;
 	t1 = b -a;
 	t2 = p -b;
 	float x = cross(t1,t2);
 	return x < 0;
+}
+
+inline vec4 intersection(vec4 a, vec4 b, vec4 c , vec4 d){
+	//todo might be a faster way of doing this?
+	float l = cross(c-a, d-c) / cross(b-a,d-c);
+	return a + l*(b-a);
 }
 
 void Rasteriser::Clip(vec4 in_list[3]) {
@@ -242,6 +247,15 @@ void Rasteriser::Clip(vec4 in_list[3]) {
 			bool in_current = rhs(clip_edge[clip],clip_edge[next_clip],inList[inVertexPtr]);
 			bool in_next = rhs(clip_edge[clip],clip_edge[next_clip],inList[nextVertexPtr]);
 
+
+			vec4 a(0,0,0,0);
+			vec4 b(0,1,0,0);
+			vec4 c(-10,20,0,0);
+			vec4 d(100,200,0,0);
+			vec4 intersect = intersection(a,b,c,d);
+			cout << "I: " << intersect.x << "," << intersect.y << "\n";
+
+
 			if(in_current && in_next){
 				outList[outListCount++] = inList[inVertexPtr];
 				continue;
@@ -250,11 +264,13 @@ void Rasteriser::Clip(vec4 in_list[3]) {
 			}
 
 
-			vec2 diffAB = vec2(inList[inVertexPtr]) - clip_edge[clip];
-			vec2 diffVec = vec2(inList[nextVertexPtr] - inList[inVertexPtr]);
-			float a = cross(diffAB, vecClip) / cross(diffVec,vecClip);
 
-			vec4 intersection = inList[inVertexPtr] +a * vec4(diffVec,0,0) ;//For now don't interpolate
+
+
+
+
+
+		 	//For now don't interpolate
 
 			int hha = 2;
 
