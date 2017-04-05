@@ -33,7 +33,7 @@ private:
 		float * depthBufferLight;
 
 		vec3 getPoint(int x, int y);
-		void DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, bool draw_screen);
+		void DrawPolygon(vec4 verticies[3], int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
 		void ViewPort(int x, int y, int w, int h);
     void Projection(float c);

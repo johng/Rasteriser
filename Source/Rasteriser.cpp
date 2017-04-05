@@ -115,42 +115,75 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
   return vec3(-1,1,1);
 }
 
-void Rasteriser::DrawPolygon(vec4 vetex[3], Shader& shader , float * z_buffer, bool draw_screen) {
+void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen) {
 
 
-	vec4 v0 = vetex[0] ;
-	vec4 v1 = vetex[1] ;
-	vec4 v2 = vetex[2] ;
+	int triangleCount = 1;
+
+	//todo generalise this
+	if(polyEdgeCount == 4){
+		triangleCount = 2;
+	}else if(polyEdgeCount == 5){
+		triangleCount = 3;
+	}
+
+	vec4 v0 ;
+	vec4 v1 ;
+	vec4 v2 ;
+
+	for(int i = 0 ; i < triangleCount ; i ++) {
+
+		//todo generalise this too
+		if(i == 0){
+
+			v0 = verticies[2];
+			v1 = verticies[0];
+			v2 = verticies[1];
 
 
-  vec2 bboxmin( std::numeric_limits<float>::max(),  std::numeric_limits<float>::max());
-  vec2 bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
-  for (int i=0; i<3; i++) {
-    for (int j=0; j<2; j++) {
-      bboxmin[j] = std::min(bboxmin[j], vetex[i][j]/vetex[i][3]);
-      bboxmax[j] = std::max(bboxmax[j], vetex[i][j]/vetex[i][3]);
-    }
-  }
+		}else if (i ==1 ){
+			v0 = verticies[2];
+			v1 = verticies[3];
+			v2 = verticies[0];
 
-  //todo integrate this with the code above
+		}else if (i ==2 ){
+			v0 = verticies[0];
+			v1 = verticies[3];
+			v2 = verticies[4];
+
+		}
 
 
-for (int x=bboxmin.x; x<=bboxmax.x; x++) {
-  for (int y=bboxmin.y; y<=bboxmax.y; y++) {
 
-			vec3 c = barycentric(vec2(v0.x/v0.w,v0.y/v0.w),
-													 vec2(v1.x/v1.w,v1.y/v1.w),
-													 vec2(v2.x/v2.w,v2.y/v2.w),
-													 vec2(x,y));
-			float z = v0.z*c.x + v1.z*c.y + v2.z*c.z;
-			float w = v0.w*c.x + v1.w*c.y + v2.w*c.z;
-			int frag_depth = z/w;
-			if (c.x<0 || c.y<0 || c.z<0 || z_buffer[x+y*width]>frag_depth) continue;
-			vec3 colour;
-			shader.fragment(c, colour);
-			z_buffer[x+y*width] = frag_depth;
-			if(draw_screen)PutPixelSDL( screen, x, height-(y+1), colour );
+		vec2 bboxmin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+		vec2 bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 2; j++) {
+				bboxmin[j] = std::min(bboxmin[j], verticies[i][j] / verticies[i][3]);
+				bboxmax[j] = std::max(bboxmax[j], verticies[i][j] / verticies[i][3]);
+			}
+		}
 
+		//todo integrate this with the code above
+
+
+		for (int x = bboxmin.x; x <= bboxmax.x; x++) {
+			for (int y = bboxmin.y; y <= bboxmax.y; y++) {
+
+				vec3 c = barycentric(vec2(v0.x / v0.w, v0.y / v0.w),
+														 vec2(v1.x / v1.w, v1.y / v1.w),
+														 vec2(v2.x / v2.w, v2.y / v2.w),
+														 vec2(x, y));
+				float z = v0.z * c.x + v1.z * c.y + v2.z * c.z;
+				float w = v0.w * c.x + v1.w * c.y + v2.w * c.z;
+				int frag_depth = z / w;
+				if (c.x < 0 || c.y < 0 || c.z < 0 || z_buffer[x + y * width] > frag_depth) continue;
+				vec3 colour;
+				shader.fragment(c, colour);
+				z_buffer[x + y * width] = frag_depth;
+				if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
+
+			}
 		}
 	}
 }
@@ -275,7 +308,6 @@ void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 
 	*count = inListCount;
 	*clipped = inList;
-	int a =0;
 }
 
 void Rasteriser::Draw()
@@ -317,28 +349,15 @@ void Rasteriser::Draw()
 
 
 
-	vec4 verticies[3] = {
-
-					vec4 (1,1,0,0),
-					vec4 (-10,1,0,0),
-					vec4 (-10,-100,0,0)
-
-	};
-
 	vec4 * outlist = (vec4*)malloc(sizeof(vec4)*20);
-	int count;
-	Clip(verticies,&outlist,&count);
-
-
   for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       vetex[j] = depthShader.proj(i,j);
     }
 
-		vec4 * outlist = (vec4*)malloc(sizeof(vec4)*20);
 		int count;
 		Clip(vetex,&outlist,&count);
-
+		DrawPolygon(outlist, count, depthShader, depthBufferLight, false);
 	}
 
   LookAt(camera_pos, center, up);
@@ -351,8 +370,11 @@ void Rasteriser::Draw()
   for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       vetex[j] = shadowShader.proj(i,j);
-
     }
+		outlist = (vec4*)malloc(sizeof(vec4)*20);
+		int count;
+		Clip(vetex,&outlist,&count);
+		DrawPolygon(outlist, count, shadowShader, depthBufferCamera, true);
 
   }
 
