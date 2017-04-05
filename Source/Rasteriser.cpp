@@ -120,6 +120,10 @@ void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader
 
 	int triangleCount = 1;
 
+	if(polyEdgeCount == 0){
+		return;
+	}
+
 	//todo generalise this
 	if(polyEdgeCount == 4){
 		triangleCount = 2;
@@ -239,7 +243,7 @@ inline bool rhs(vec2 a, vec2 b, vec2 p){
 	t1 = b -a;
 	t2 = p -b;
 	float x = cross(t1,t2);
-	return x < 0;
+	return x <= 0;
 }
 
 inline vec4 intersection(vec4 a, vec4 b, vec4 c , vec4 d){
@@ -278,8 +282,20 @@ void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 		{
 			int nextVertexPtr = (inVertexPtr + 1) % inListCount;
 
-			bool in_current = rhs(clip_edge[clip],clip_edge[next_clip],inList[inVertexPtr]);
-			bool in_next = rhs(clip_edge[clip],clip_edge[next_clip],inList[nextVertexPtr]);
+			float w_current = inList[inVertexPtr].w;
+			float w_next = inList[nextVertexPtr].w;
+
+			bool in_current = rhs(clip_edge[clip],
+														clip_edge[next_clip],
+														inList[nextVertexPtr]/w_current);
+
+			bool in_next = rhs(clip_edge[clip],
+												 clip_edge[next_clip],
+												 inList[nextVertexPtr]/w_next);
+
+			if(w_current < 0.2 || w_next < 0.2){
+				int a = 2;
+			}
 
 			if(in_current && in_next){
 				outList[outListCount++] = inList[nextVertexPtr];
@@ -288,12 +304,19 @@ void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 				continue;
 			}
 
-			vec4 intersect = intersection(inList[inVertexPtr],inList[nextVertexPtr]
-							,vec4(clip_edge[clip],0,0),vec4(clip_edge[next_clip],0,0));
+			vec4 intersect = intersection(
+							inList[inVertexPtr]/w_current,
+							inList[nextVertexPtr]/w_next,
+							vec4(clip_edge[clip],0,0),
+							vec4(clip_edge[next_clip],0,0));
 
 			if(in_current && !in_next){
+				intersect*=w_next;
+				intersect.w = w_next;
 				outList[outListCount++] = intersect;
 			}else if(!in_current && in_next){
+				intersect*=w_current;
+				intersect.w = w_current;
 				outList[outListCount++] = intersect;
 				outList[outListCount++] = inList[nextVertexPtr] ;
 			}

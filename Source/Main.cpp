@@ -11,6 +11,15 @@ using glm::vec3;
 const int SCREEN_WIDTH = 500;
 const int SCREEN_HEIGHT = 500;
 
+
+float xx_camera = 0;
+float yy_camera = 0;
+
+float xx_light = 0;
+float yy_light = 0;
+
+float r_camera = 0.5;
+
 int main(int argc, char* argv[] )
 {
 
@@ -49,6 +58,13 @@ int main(int argc, char* argv[] )
 	}
 
 	Camera camera(vec3(1,1,4));
+
+	float x = sin(xx_camera) * r_camera ;
+	float z = cos(xx_camera) * r_camera ;
+	float y = sin(yy_camera) * r_camera;
+
+	camera.set(vec3(x,yy_camera,z));
+
 	Lighting lighting(vec3(1,1,1), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
@@ -77,13 +93,7 @@ int main(int argc, char* argv[] )
 	return 0;
 }
 
-float xx_camera = 0;
-float yy_camera = 0;
 
-float xx_light = 0;
-float yy_light = 0;
-
-float r_camera = 30;
 bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 {
 	// Compute frame time:
@@ -135,9 +145,9 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 		xx_camera += delta_move;
 	}
 
-	float x = sin(xx_camera) * 20 ;
-  float z = cos(xx_camera) * 20 ;
-  float y = sin(yy_camera) * 20;
+	float x = sin(xx_camera) * r_camera ;
+  float z = cos(xx_camera) * r_camera ;
+  float y = sin(yy_camera) * r_camera;
 
 	camera.set(vec3(x,yy_camera,z));
 
