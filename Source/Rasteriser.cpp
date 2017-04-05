@@ -174,17 +174,17 @@ void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader
 		for (int x = bboxmin.x; x <= bboxmax.x; x++) {
 			for (int y = bboxmin.y; y <= bboxmax.y; y++) {
 
-				vec3 c = barycentric(vec2(v0.x / v0.w, v0.y / v0.w),
+				vec3 bar = barycentric(vec2(v0.x / v0.w, v0.y / v0.w),
 														 vec2(v1.x / v1.w, v1.y / v1.w),
 														 vec2(v2.x / v2.w, v2.y / v2.w),
 														 vec2(x, y));
-				float z = v0.z * c.x + v1.z * c.y + v2.z * c.z;
-				float w = v0.w * c.x + v1.w * c.y + v2.w * c.z;
-				int frag_depth = z / w;
-				if (c.x < 0 || c.y < 0 || c.z < 0 || z_buffer[x + y * width] > frag_depth) continue;
+				float z = v0.z * bar.x + v1.z * bar.y + v2.z * bar.z;
+				float w = v0.w * bar.x + v1.w * bar.y + v2.w * bar.z;
+				int depth = z / w;
+				if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > depth) continue;
 				vec3 colour;
-				shader.fragment(c, colour);
-				z_buffer[x + y * width] = frag_depth;
+				shader.fragment(bar, colour);
+				z_buffer[x + y * width] = depth;
 				if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
 
 			}
@@ -287,15 +287,13 @@ void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 
 			bool in_current = rhs(clip_edge[clip],
 														clip_edge[next_clip],
-														inList[nextVertexPtr]/w_current);
+														inList[inVertexPtr]/w_current);
 
 			bool in_next = rhs(clip_edge[clip],
 												 clip_edge[next_clip],
 												 inList[nextVertexPtr]/w_next);
 
-			if(w_current < 0.2 || w_next < 0.2){
-				int a = 2;
-			}
+
 
 			if(in_current && in_next){
 				outList[outListCount++] = inList[nextVertexPtr];
@@ -311,12 +309,15 @@ void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 							vec4(clip_edge[next_clip],0,0));
 
 			if(in_current && !in_next){
-				intersect*=w_next;
+				intersect *= w_next;
+				//intersect.z = (inList[inVertexPtr]+inList[inVertexPtr]).z/2;
 				intersect.w = w_next;
 				outList[outListCount++] = intersect;
 			}else if(!in_current && in_next){
-				intersect*=w_current;
+				intersect *= w_current;
+				//intersect.z = (inList[inVertexPtr]+inList[inVertexPtr]).z/2;
 				intersect.w = w_current;
+
 				outList[outListCount++] = intersect;
 				outList[outListCount++] = inList[nextVertexPtr] ;
 			}
