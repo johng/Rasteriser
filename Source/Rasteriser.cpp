@@ -19,7 +19,8 @@ vec3 Rasteriser::getPoint(int x, int y)
 vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
-  vec4 retval = vertex * modelView * projection * viewPort;
+  vec4 retval = vertex * modelView ;
+  //vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
     tri[i][index] = retval[i]/retval.w;
   }
@@ -28,7 +29,8 @@ vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 
 bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
   vec3 p = bar*tri;
-  colour = vec3(1, 1, 1)*(p.z/depth);
+  //colour = vec3(1, 1, 1)*(p.z/depth);
+  colour = vec3(100, 100, 100);
   return true;
 }
 
@@ -36,7 +38,8 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
   textureCoordinates[index] = r->model->textureCoordinate(triangle_index,index);
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
-  vec4 retval = vertex * modelView * projection * viewPort;
+  //vec4 retval = vertex * modelView * projection * viewPort;
+  vec4 retval = vertex * modelView ;
   for(int i = 0; i < 3 ; i ++){
     //Projecting the triangle into screen space
     tri[i][index] = retval[i]/retval.w;
@@ -131,40 +134,38 @@ void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader
 		triangleCount = 3;
 	}
 
-	vec4 v0 ;
-	vec4 v1 ;
-	vec4 v2 ;
+	vec4 drawVerticies[3];
 
 	for(int i = 0 ; i < triangleCount ; i ++) {
 
 		//todo generalise this too
 		if(i == 0){
 
-			v0 = verticies[2];
-			v1 = verticies[0];
-			v2 = verticies[1];
+			drawVerticies[0] = verticies[2];
+			drawVerticies[1] = verticies[0];
+			drawVerticies[2] = verticies[1];
 
 
 		}else if (i ==1 ){
-			v0 = verticies[2];
-			v1 = verticies[3];
-			v2 = verticies[0];
+			drawVerticies[0] = verticies[2];
+			drawVerticies[1] = verticies[3];
+			drawVerticies[2] = verticies[0];
 
 		}else if (i ==2 ){
-			v0 = verticies[0];
-			v1 = verticies[3];
-			v2 = verticies[4];
+			drawVerticies[0] = verticies[0];
+			drawVerticies[1] = verticies[3];
+			drawVerticies[2] = verticies[4];
 
 		}
-
 
 
 		vec2 bboxmin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 		vec2 bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
 		for (int i = 0; i < 3; i++) {
+			drawVerticies[i] = drawVerticies[i] * projection * viewPort;
 			for (int j = 0; j < 2; j++) {
-				bboxmin[j] = std::min(bboxmin[j], verticies[i][j] / verticies[i][3]);
-				bboxmax[j] = std::max(bboxmax[j], verticies[i][j] / verticies[i][3]);
+				bboxmin[j] = std::min(bboxmin[j], drawVerticies[i][j] / drawVerticies[i][3]);
+				bboxmax[j] = std::max(bboxmax[j], drawVerticies[i][j] / drawVerticies[i][3]);
 			}
 		}
 
@@ -174,12 +175,12 @@ void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader
 		for (int x = bboxmin.x; x <= bboxmax.x; x++) {
 			for (int y = bboxmin.y; y <= bboxmax.y; y++) {
 
-				vec3 bar = barycentric(vec2(v0.x / v0.w, v0.y / v0.w),
-														 vec2(v1.x / v1.w, v1.y / v1.w),
-														 vec2(v2.x / v2.w, v2.y / v2.w),
+				vec3 bar = barycentric(vec2(drawVerticies[0].x / drawVerticies[0].w, drawVerticies[0].y / drawVerticies[0].w),
+														 vec2(drawVerticies[1].x / drawVerticies[1].w, drawVerticies[1].y / drawVerticies[1].w),
+														 vec2(drawVerticies[2].x / drawVerticies[2].w, drawVerticies[2].y / drawVerticies[2].w),
 														 vec2(x, y));
-				float z = v0.z * bar.x + v1.z * bar.y + v2.z * bar.z;
-				float w = v0.w * bar.x + v1.w * bar.y + v2.w * bar.z;
+				float z = drawVerticies[0].z * bar.x + drawVerticies[1].z * bar.y + drawVerticies[2].z * bar.z;
+				float w = drawVerticies[0].w * bar.x + drawVerticies[1].w * bar.y + drawVerticies[2].w * bar.z;
 				int depth = z / w;
 				if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > depth) continue;
 				vec3 colour;
@@ -334,6 +335,106 @@ void Rasteriser::Clip(vec4 vertex[3], vec4 ** clipped, int * count) {
 	*clipped = inList;
 }
 
+
+#define W_CLIP 0.001
+
+void ClipW(vec4 * verticies ,vec4 * outVerticies, int count, int * outCount) {
+
+	vec4 tempVerticies [10];
+
+	vec4 currentV, previousV;
+
+	int currentDot, previousDot;
+	int tempCount = 0;
+
+	int previousVertex = count - 1;
+	previousDot = verticies[previousVertex].w < W_CLIP ? -1 : 1;
+	for(int currentVertex = 0; currentVertex < count ; currentVertex++){
+
+		currentDot = verticies[currentVertex].w < W_CLIP ? -1 : 1;
+
+		if (previousDot * currentDot < 0){
+
+			float ifactor = (float) ((W_CLIP - verticies[previousVertex].w) /
+															 (verticies[previousVertex].w - verticies[currentVertex].w));
+
+			vec4 ip = verticies[previousVertex] + ifactor * (verticies[currentVertex] - verticies[previousVertex]);
+
+			tempVerticies[tempCount++] = ip;
+
+		}
+
+
+		//If the current doesn't need to be clipped, add it to the list
+		if (currentDot > 0){
+			tempVerticies[tempCount++] = verticies[currentVertex];
+		}
+
+	}
+
+	memcpy(outVerticies, tempVerticies, tempCount * sizeof(vec4));
+	*outCount = tempCount;
+}
+
+void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCount , int axis){
+
+
+	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * 10);
+
+	vec4 * inVerticies = verticies;
+
+	int currentDot, previousDot;
+	int outCount = 0;
+
+	vec4 * temp;
+
+
+	for(int i = 0 ; i < 2 ; i ++) {
+
+
+		int previousVertex = inCount - 1;
+
+		previousDot = i*inVerticies[previousVertex][axis] > inVerticies[previousVertex].w ? -1 : 1;
+
+		for (int currentVertex = 0; currentVertex < inCount; currentVertex++) {
+
+			currentDot = i*inVerticies[currentVertex][axis] > inVerticies[currentVertex].w ? -1 : 1;
+
+			if (previousDot * currentDot < 0) {
+
+				float ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
+																 (inVerticies[previousVertex].w - inVerticies[currentVertex].w));
+
+				vec4 ip = inVerticies[previousVertex] + ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
+
+				outVerticies[outCount++] = ip;
+
+			}
+
+
+			//If the currents doesn't need to be clipped, add it to the list
+			if (currentDot > 0) {
+				outVerticies[outCount++] = inVerticies[currentVertex];
+			}
+
+		}
+
+		temp = inVerticies;
+		inVerticies = outVerticies;
+		outVerticies = temp;
+
+		inCount = outCount;
+		outCount = 0;
+
+	}
+
+
+	memcpy(verticies, oVerticies, sizeof(vec4)*inCount);
+	*passOnCount = inCount;
+
+}
+
+
 void Rasteriser::Draw()
 {
 
@@ -380,7 +481,10 @@ void Rasteriser::Draw()
     }
 
 		int count;
-		Clip(vetex,&outlist,&count);
+		ClipW(vetex,outlist,3,&count);
+		ClipAxis(outlist,outlist,count,&count,0);
+		ClipAxis(outlist,outlist,count,&count,1);
+		ClipAxis(outlist,outlist,count,&count,2);
 		DrawPolygon(outlist, count, depthShader, depthBufferLight, false);
 	}
 
@@ -393,12 +497,15 @@ void Rasteriser::Draw()
 
   for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
-      vetex[j] = shadowShader.proj(i,j);
+      vetex[j] = depthShader.proj(i,j);
     }
 		outlist = (vec4*)malloc(sizeof(vec4)*20);
 		int count;
-		Clip(vetex,&outlist,&count);
-		DrawPolygon(outlist, count, shadowShader, depthBufferCamera, true);
+		ClipW(vetex,outlist,3,&count);
+		ClipAxis(outlist,outlist,count,&count,0);
+		ClipAxis(outlist,outlist,count,&count,1);
+		ClipAxis(outlist,outlist,count,&count,2);
+		DrawPolygon(outlist, count, depthShader, depthBufferCamera, true);
 
   }
 
