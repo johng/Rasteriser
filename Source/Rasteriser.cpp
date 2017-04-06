@@ -427,16 +427,15 @@ void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCou
 			if (previousDot * currentDot < 0) {
 
 
-				float ifactor = (float) (
-
-								(inVerticies[currentVertex].w - j*inVerticies[previousVertex][axis]) /
+				float ifactor =  (inVerticies[previousVertex].w + j*inVerticies[previousVertex][axis]) /
 								(
-												inVerticies[previousVertex].w - j*inVerticies[currentVertex][axis] -
-												inVerticies[currentVertex].w - j*inVerticies[currentVertex][axis]
-								)
+												inVerticies[previousVertex].w + j*inVerticies[previousVertex][axis] -
+												inVerticies[currentVertex].w + j*inVerticies[currentVertex][axis]
 								);
 
-				vec4 ip = inVerticies[previousVertex] + ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
+
+				vec4 ip = inVerticies[previousVertex] +
+								ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
 
 				outVerticies[outCount++] = ip;
 
