@@ -387,12 +387,12 @@ void ClipW(vec4 * verticies ,vec4 * outVerticies, int count, int * outCount) {
 
 		}
 
-
 		//If the current doesn't need to be clipped, add it to the list
 		if (currentDot > 0){
 			tempVerticies[tempCount++] = verticies[currentVertex];
 		}
-
+		previousVertex = currentVertex;
+		previousDot = currentDot;
 	}
 
 	memcpy(outVerticies, tempVerticies, tempCount * sizeof(vec4));
@@ -427,10 +427,10 @@ void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCou
 			if (previousDot * currentDot < 0) {
 
 
-				float ifactor =  (inVerticies[previousVertex].w + j*inVerticies[previousVertex][axis]) /
+				float ifactor =  (inVerticies[previousVertex].w - j*inVerticies[previousVertex][axis]) /
 								(
-												inVerticies[previousVertex].w + j*inVerticies[previousVertex][axis] -
-												inVerticies[currentVertex].w + j*inVerticies[currentVertex][axis]
+												(inVerticies[previousVertex].w - j*inVerticies[previousVertex][axis]) - (
+												inVerticies[currentVertex].w - j*inVerticies[currentVertex][axis])
 								);
 
 
@@ -446,20 +446,17 @@ void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCou
 			if (currentDot > 0) {
 				outVerticies[outCount++] = inVerticies[currentVertex];
 			}
-
+			previousVertex = currentVertex;
+			previousDot = currentDot;
 		}
 
-		temp = inVerticies;
 		inVerticies = outVerticies;
-		outVerticies = temp;
-
 		inCount = outCount;
 		outCount = 0;
 
 	}
 
-
-	memcpy(verticies, oVerticies, sizeof(vec4)*inCount);
+	memcpy(oVerticies,inVerticies , sizeof(vec4)*inCount);
 	*passOnCount = inCount;
 
 }
