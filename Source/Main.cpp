@@ -18,7 +18,7 @@ float yy_camera = 0;
 float xx_light = 0;
 float yy_light = 0;
 
-float r_camera = 4;
+float r_camera = 0.5;
 
 int main(int argc, char* argv[] )
 {

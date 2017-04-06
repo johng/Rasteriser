@@ -19,7 +19,7 @@ vec3 Rasteriser::getPoint(int x, int y)
 vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
-  vec4 retval = vertex * modelView ;
+  vec4 retval = vertex * modelView * projection ;
   //vec4 retval = vertex * modelView * projection * viewPort;
   for(int i = 0; i < 3 ; i ++){
     tri[i][index] = retval[i]/retval.w;
@@ -30,7 +30,7 @@ vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
   vec3 p = bar*tri;
   //colour = vec3(1, 1, 1)*(p.z/depth);
-  colour = vec3(100, 100, 100);
+  colour = vec3(255, 255, 255);
   return true;
 }
 
@@ -39,7 +39,7 @@ vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
   textureCoordinates[index] = r->model->textureCoordinate(triangle_index,index);
   vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
   //vec4 retval = vertex * modelView * projection * viewPort;
-  vec4 retval = vertex * modelView ;
+  vec4 retval = vertex * modelView * projection ;
   for(int i = 0; i < 3 ; i ++){
     //Projecting the triangle into screen space
     tri[i][index] = retval[i]/retval.w;
@@ -117,7 +117,7 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 
   return vec3(-1,1,1);
 }
-
+float mm = -1;
 void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen) {
 
 
@@ -161,31 +161,54 @@ void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader
 
 		vec2 bboxmin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 		vec2 bboxmax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+
+
 		for (int i = 0; i < 3; i++) {
-			drawVerticies[i] = drawVerticies[i] * projection * viewPort;
+
+			for(int j = 0; j < 2; j++) {
+				if (
+								(drawVerticies[i][j] / drawVerticies[i].w > 1) ||
+								 (drawVerticies[i][j] / drawVerticies[i].w) < -1) {
+
+					if(drawVerticies[i][j] / drawVerticies[i].w > mm){
+						mm = drawVerticies[i][j] / drawVerticies[i].w;
+					}
+					int a = 2;
+				}
+			}
+
+			drawVerticies[i] = (drawVerticies[i]/drawVerticies[i].w) * viewPort;
 			for (int j = 0; j < 2; j++) {
-				bboxmin[j] = std::min(bboxmin[j], drawVerticies[i][j] / drawVerticies[i][3]);
-				bboxmax[j] = std::max(bboxmax[j], drawVerticies[i][j] / drawVerticies[i][3]);
+				bboxmin[j] = std::min(bboxmin[j], drawVerticies[i][j] );
+				bboxmax[j] = std::max(bboxmax[j], drawVerticies[i][j] );
 			}
 		}
 
 		//todo integrate this with the code above
 
 
-		for (int x = bboxmin.x; x <= bboxmax.x; x++) {
-			for (int y = bboxmin.y; y <= bboxmax.y; y++) {
+		for (int x = bboxmin.x; x < bboxmax.x; x++) {
+			for (int y = bboxmin.y; y < bboxmax.y; y++) {
 
-				vec3 bar = barycentric(vec2(drawVerticies[0].x / drawVerticies[0].w, drawVerticies[0].y / drawVerticies[0].w),
-														 vec2(drawVerticies[1].x / drawVerticies[1].w, drawVerticies[1].y / drawVerticies[1].w),
-														 vec2(drawVerticies[2].x / drawVerticies[2].w, drawVerticies[2].y / drawVerticies[2].w),
+				if(x < 0 || y < 0 || x > width || y > height){
+
+					continue;
+				}
+
+				vec3 bar = barycentric(vec2(drawVerticies[0].x , drawVerticies[0].y ),
+														 vec2(drawVerticies[1].x , drawVerticies[1].y),
+														 vec2(drawVerticies[2].x , drawVerticies[2].y ),
 														 vec2(x, y));
 				float z = drawVerticies[0].z * bar.x + drawVerticies[1].z * bar.y + drawVerticies[2].z * bar.z;
 				float w = drawVerticies[0].w * bar.x + drawVerticies[1].w * bar.y + drawVerticies[2].w * bar.z;
-				int depth = z / w;
-				if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > depth) continue;
+				int depth = z ;
+				if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
 				vec3 colour;
 				shader.fragment(bar, colour);
 				z_buffer[x + y * width] = depth;
+				if(colour != vec3(255,255,255)){
+					int a = 2;
+				}
 				if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
 
 			}
@@ -391,19 +414,27 @@ void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCou
 
 	for(int i = 0 ; i < 2 ; i ++) {
 
+		int j = (i % 2 == 1 ? -1 : 1);
 
 		int previousVertex = inCount - 1;
 
-		previousDot = i*inVerticies[previousVertex][axis] > inVerticies[previousVertex].w ? -1 : 1;
+		previousDot = j * inVerticies[previousVertex][axis] > inVerticies[previousVertex].w ? -1 : 1;
 
 		for (int currentVertex = 0; currentVertex < inCount; currentVertex++) {
 
-			currentDot = i*inVerticies[currentVertex][axis] > inVerticies[currentVertex].w ? -1 : 1;
+			currentDot = j * inVerticies[currentVertex][axis] > inVerticies[currentVertex].w ? -1 : 1;
 
 			if (previousDot * currentDot < 0) {
 
-				float ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
-																 (inVerticies[previousVertex].w - inVerticies[currentVertex].w));
+
+				float ifactor = (float) (
+
+								(inVerticies[currentVertex].w - j*inVerticies[previousVertex][axis]) /
+								(
+												inVerticies[previousVertex].w - j*inVerticies[currentVertex][axis] -
+												inVerticies[currentVertex].w - j*inVerticies[currentVertex][axis]
+								)
+								);
 
 				vec4 ip = inVerticies[previousVertex] + ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
 
@@ -454,7 +485,7 @@ void Rasteriser::Draw()
   light_pos = lighting.position();
   camera_pos = camera.position();
   light_colour = lighting.colour();
-  ViewPort(width/8, height/8, width*3/4, height*3/4);
+  ViewPort(0, 0, width, height);
 
 
   light_pos = normalize(light_pos);
@@ -472,8 +503,6 @@ void Rasteriser::Draw()
 
   int renderCount = model->triangleCount();
 
-
-
 	vec4 * outlist = (vec4*)malloc(sizeof(vec4)*20);
   for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
@@ -485,7 +514,7 @@ void Rasteriser::Draw()
 		ClipAxis(outlist,outlist,count,&count,0);
 		ClipAxis(outlist,outlist,count,&count,1);
 		ClipAxis(outlist,outlist,count,&count,2);
-		DrawPolygon(outlist, count, depthShader, depthBufferLight, false);
+		//DrawPolygon(outlist, count, depthShader, depthBufferLight, false);
 	}
 
   LookAt(camera_pos, center, up);
@@ -509,7 +538,7 @@ void Rasteriser::Draw()
 
   }
 
-
+	cout << mm << "\n";
   if (SDL_MUSTLOCK(screen)) {
     SDL_UnlockSurface(screen);
   }

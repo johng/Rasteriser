@@ -50,6 +50,10 @@ void PutPixelSDL( SDL_Surface* surface, int x, int y, glm::vec3 color )
 	Uint8 g = Uint8( glm::clamp( color.g, 0.f, 255.f ) );
 	Uint8 b = Uint8( glm::clamp( color.b, 0.f, 255.f ) );
 
+	if(r != 255 ||g != 255 ||b != 255 ){
+		int a = 2;
+	}
+
 	Uint32* p = (Uint32*)surface->pixels + y*surface->pitch/4 + x;
 	*p = SDL_MapRGB( surface->format, r, g, b );
 }
