@@ -3,18 +3,9 @@
 #include "Camera.h"
 #include "Lighting.h"
 #include "Rasteriser.h"
-#define PI 3.14159265359
-#define C(x,y,width,height)  (x + y * width)
 #define MAX_VERTICIES 10
 
 
-vec3 Rasteriser::getPoint(int x, int y)
-{
-  return vec3(
-          (x - width/2)/ (float) width,
-          -(y - height/2)/ (float) height,
-           1);
-}
 
 vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 
@@ -178,10 +169,12 @@ void Rasteriser::DrawPolygon(vec4 * verticies, int polyEdgeCount, Shader &shader
 				}
 
 				vec3 bar = barycentric(vec2(drawVerticies[0].x , drawVerticies[0].y ),
-														 vec2(drawVerticies[1].x , drawVerticies[1].y),
-														 vec2(drawVerticies[2].x , drawVerticies[2].y ),
-														 vec2(x, y));
-				float z = drawVerticies[0].z * bar.x + drawVerticies[1].z * bar.y + drawVerticies[2].z * bar.z;
+															 vec2(drawVerticies[1].x , drawVerticies[1].y),
+															 vec2(drawVerticies[2].x , drawVerticies[2].y ),
+															 vec2(x, y));
+
+				float z =  bar.x/drawVerticies[0].z +  bar.y/drawVerticies[1].z  +  bar.z/ drawVerticies[2].z;
+				z = 1/z;
 				if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
 				vec3 colour;
 				shader.fragment(bar, colour);
@@ -292,6 +285,7 @@ void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) 
 
 			//Exit if we have clipped all vertices
 			if(inCount == 0){
+				*retCount = 0;
 				return;
 			}
 
@@ -381,12 +375,12 @@ void Rasteriser::Draw()
 	//todo split into tiles
 	int count;
   int renderCount = model->triangleCount();
-	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * 10);
+	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       vetex[j] = depthShader.proj(i,j);
     }
-		Clip(vetex, 3,outVerticies, &count);
+		Clip(vetex,3,outVerticies, &count);
 		DrawPolygon(outVerticies, count, depthShader, depthBufferLight, false);
 	}
 
@@ -400,7 +394,7 @@ void Rasteriser::Draw()
     for(int j = 0; j < 3 ;j++){
       vetex[j] = depthShader.proj(i,j);
     }
-		Clip(vetex,3, outVerticies, &count);
+		Clip(vetex,3,outVerticies, &count);
 		DrawPolygon(outVerticies, count, depthShader, depthBufferCamera, true);
   }
 
