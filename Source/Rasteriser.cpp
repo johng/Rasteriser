@@ -4,7 +4,7 @@
 #include "Lighting.h"
 #include "Rasteriser.h"
 #define MAX_VERTICIES 10
-
+#define W_CLIP 0.00001
 
 
 vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
@@ -218,21 +218,6 @@ void Rasteriser::ViewPort(int x, int y, int w, int h){
   viewPort[2][2] = depth/2.f;
 }
 
-
-inline float cross (vec2 a , vec2 b){
-	return a.x * b.y - a.y * b.x;
-}
-
-inline bool rhs(vec2 a, vec2 b, vec2 p){
-	vec2 t1, t2;
-	t1 = b -a;
-	t2 = p -b;
-	float x = cross(t1,t2);
-	return x <= 0;
-}
-
-#define W_CLIP 0.0000001
-
 void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) {
 
 	vec4 currentV, previousV;
@@ -250,7 +235,7 @@ void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) 
 
 		currentIn = inVerticies[currentVertex].w < W_CLIP ? 0 : 1;
 
-		if ( currentIn != previousIn  ) {
+		if ( currentIn ^ previousIn  ) {
 
 			float ifactor;
 			ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
@@ -299,7 +284,7 @@ void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) 
 
 				currentIn = j * inVerticies[currentVertex][axis] > inVerticies[currentVertex].w ? 0 : 1;
 
-				if (previousIn != currentIn) {
+				if (previousIn ^ currentIn) {
 
 
 					float ifactor = (inVerticies[previousVertex].w - j * inVerticies[previousVertex][axis]) /
