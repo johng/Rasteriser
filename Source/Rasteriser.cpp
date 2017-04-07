@@ -5,7 +5,7 @@
 #include "Rasteriser.h"
 #define PI 3.14159265359
 #define C(x,y,width,height)  (x + y * width)
-
+#define MAX_VERTICIES 10
 
 
 vec3 Rasteriser::getPoint(int x, int y)
@@ -240,51 +240,49 @@ inline bool rhs(vec2 a, vec2 b, vec2 p){
 
 #define W_CLIP 0.0000001
 
-void ClipWAxis(vec4 *verticies, vec4 *outVerticies, int count, int *outCount) {
-
-	vec4 tempVerticies [10];
+void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) {
 
 	vec4 currentV, previousV;
 
-	int currentIn, previousIn;
-	int tempCount = 0;
-
-	int previousVertex = count - 1;
-	previousIn = verticies[previousVertex].w < W_CLIP ? 0 : 1;
-	for(int currentVertex = 0; currentVertex < count ; currentVertex++){
-
-		currentIn = verticies[currentVertex].w < W_CLIP ? 0 : 1;
-
-		if ( currentIn != previousIn  ) {
-
-			float ifactor;
-			ifactor = (float) ((W_CLIP - verticies[previousVertex].w) /
-												 (verticies[previousVertex].w - verticies[currentVertex].w));
-			vec4 ip = verticies[previousVertex] + ifactor * (verticies[currentVertex] - verticies[previousVertex]);
-			tempVerticies[tempCount++] = ip;
-		}
-
-		//If the current doesn't need to be clipped, add it to the list
-		if (currentIn){
-			tempVerticies[tempCount++] = verticies[currentVertex];
-		}
-		previousVertex = currentVertex;
-		previousIn = currentIn;
-	}
-	memcpy(outVerticies, tempVerticies, tempCount * sizeof(vec4));
-	*outCount = tempCount;
-}
-
-void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCount ){
-
-
-	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * 10);
-
-	vec4 * inVerticies = verticies;
+	vec4 outVerticiesArray[MAX_VERTICIES];
+	vec4 * outVerticies = outVerticiesArray;
 	vec4 * temp;
 
 	int currentIn, previousIn;
 	int outCount = 0;
+
+	int previousVertex = inCount - 1;
+	previousIn = inVerticies[previousVertex].w < W_CLIP ? 0 : 1;
+	for(int currentVertex = 0; currentVertex < inCount ; currentVertex++){
+
+		currentIn = inVerticies[currentVertex].w < W_CLIP ? 0 : 1;
+
+		if ( currentIn != previousIn  ) {
+
+			float ifactor;
+			ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
+												 (inVerticies[previousVertex].w - inVerticies[currentVertex].w));
+			vec4 ip = inVerticies[previousVertex] + ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
+			outVerticies[outCount++] = ip;
+		}
+
+		//If the current doesn't need to be clipped, add it to the list
+		if (currentIn){
+			outVerticies[outCount++] = inVerticies[currentVertex];
+		}
+		previousVertex = currentVertex;
+		previousIn = currentIn;
+	}
+
+	//Clip other axis
+
+	inVerticies = outVerticies;
+	inCount = outCount;
+	outCount = 0;
+
+
+	vec4 tempArray[MAX_VERTICIES];
+	outVerticies = tempArray;
 
 	//Clip on each axis
 	for (int axis = 0; axis < 3 ; axis ++) {
@@ -294,7 +292,6 @@ void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCou
 
 			//Exit if we have clipped all vertices
 			if(inCount == 0){
-				* passOnCount = 0;
 				return;
 			}
 
@@ -342,11 +339,10 @@ void ClipAxis(vec4 * verticies, vec4 * oVerticies , int inCount, int * passOnCou
 
 		}
 	}
-
-	memcpy(oVerticies,inVerticies , sizeof(vec4)*inCount);
-	*passOnCount = inCount;
-
+	memcpy(retVerticies,inVerticies,inCount*sizeof(vec4));
+	*retCount = inCount;
 }
+
 
 
 void Rasteriser::Draw()
@@ -383,18 +379,15 @@ void Rasteriser::Draw()
   vec4 vetex[3];
 
 	//todo split into tiles
-
+	int count;
   int renderCount = model->triangleCount();
-
-	vec4 * outlist = (vec4*)malloc(sizeof(vec4)*20);
+	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * 10);
   for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       vetex[j] = depthShader.proj(i,j);
     }
-
-		int count;
-		ClipWAxis(vetex, outlist, 3, &count);
-		//DrawPolygon(outlist, count, depthShader, depthBufferLight, false);
+		Clip(vetex, 3,outVerticies, &count);
+		DrawPolygon(outVerticies, count, depthShader, depthBufferLight, false);
 	}
 
   LookAt(camera_pos, center, up);
@@ -403,18 +396,12 @@ void Rasteriser::Draw()
   mat4 camera_light =  inverse(modelView * projection * viewPort) * MM;
 
   Shadow shadowShader(this, camera_light, modelView);
-
   for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
       vetex[j] = depthShader.proj(i,j);
     }
-		outlist = (vec4*)malloc(sizeof(vec4)*20);
-		int count;
-
-		ClipWAxis(vetex, outlist, 3, &count);
-		ClipAxis(outlist,outlist,count,&count);
-		DrawPolygon(outlist, count, depthShader, depthBufferCamera, true);
-
+		Clip(vetex,3, outVerticies, &count);
+		DrawPolygon(outVerticies, count, depthShader, depthBufferCamera, true);
   }
 
   if (SDL_MUSTLOCK(screen)) {
