@@ -26,21 +26,10 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 }
 
 
-vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
-  textureCoordinates[index] = r->model->textureCoordinate(triangle_index,index);
-  vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
-  //vec4 retval = vertex * modelView * projection * viewPort;
-  vec4 retval = vertex * modelView * projection ;
-  for(int i = 0; i < 3 ; i ++){
-    //Projecting the triangle into screen space
-    tri[i][index] = retval[i]/retval.w;
-  }
-  t_index = triangle_index;
-  return retval;
-}
-bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
-  vec4 p = vec4(bar*tri,1) * screen_shadow ;
+bool Rasteriser::Shadow::fragment(vec3 bar, mat3 verticies,mat3x2 textureCoordinates ,vec3 & colour) {
+
+  vec4 p = vec4(verticies*verticies,1) * screen_shadow ;
   p = p/p.w;
   int idx =  int(p[0]) + int(p[1])*r->width;
   vec2 textureCoordInterp =   textureCoordinates * bar;
@@ -233,13 +222,18 @@ inline bool rhs(vec2 a, vec2 b, vec2 p){
 
 #define W_CLIP 0.0000001
 
-void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) {
+void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVerticies, vec2 * retTextures , int * retCount) {
 
-	vec4 currentV, previousV;
+	vec4 outVerticesArray[MAX_VERTICIES];
+	vec2 outTexturesArray[MAX_VERTICIES];
 
-	vec4 outVerticiesArray[MAX_VERTICIES];
-	vec4 * outVerticies = outVerticiesArray;
-	vec4 * temp;
+
+	vec4 * outVertices = outVerticesArray;
+	vec4 * tempVertices;
+
+
+	vec2 * outTextures = outTexturesArray;
+	vec2 * tempTexture;
 
 	int currentIn, previousIn;
 	int outCount = 0;
@@ -256,12 +250,17 @@ void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) 
 			ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
 												 (inVerticies[previousVertex].w - inVerticies[currentVertex].w));
 			vec4 ip = inVerticies[previousVertex] + ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
-			outVerticies[outCount++] = ip;
+
+			vec2 ipTexture = inTextures[previousVertex] + ifactor * (inTextures[currentVertex] - inVerticies[previousVertex]);
+
+			outVertices[outCount++] = ip;
+			outTextures[outCount++] = ipTexture;
 		}
 
 		//If the current doesn't need to be clipped, add it to the list
 		if (currentIn){
-			outVerticies[outCount++] = inVerticies[currentVertex];
+			outVertices[outCount++] = inVerticies[currentVertex];
+			outTextures[outCount++] = inTextures[currentVertex];
 		}
 		previousVertex = currentVertex;
 		previousIn = currentIn;
@@ -269,13 +268,17 @@ void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) 
 
 	//Clip other axis
 
-	inVerticies = outVerticies;
+	inVerticies = outVertices;
+	inTextures = outTextures;
+
 	inCount = outCount;
 	outCount = 0;
 
 
+
+
 	vec4 tempArray[MAX_VERTICIES];
-	outVerticies = tempArray;
+	outVertices = tempArray;
 
 	//Clip on each axis
 	for (int axis = 0; axis < 3 ; axis ++) {
@@ -312,28 +315,39 @@ void Clip(vec4 *inVerticies, int inCount , vec4 * retVerticies, int * retCount) 
 					vec4 ip = inVerticies[previousVertex] +
 										ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
 
-					outVerticies[outCount++] = ip;
+					vec2 ipTexture = inTextures[previousVertex] +
+										ifactor * (inTextures[currentVertex] - inTextures[previousVertex]);
+
+					outVertices[outCount++] = ip;
+					outTextures[outCount++] = ipTexture;
 
 				}
 
 
 				//If the currents doesn't need to be clipped, add it to the list
 				if (currentIn) {
-					outVerticies[outCount++] = inVerticies[currentVertex];
+					outVertices[outCount++] = inVerticies[currentVertex];
 				}
 				previousVertex = currentVertex;
 				previousIn = currentIn;
 			}
 
-			temp = outVerticies;
-			outVerticies = inVerticies;
-			inVerticies = temp;
+			tempVertices = outVertices;
+			outVertices = inVerticies;
+			inVerticies = tempVertices;
+
+
+			tempTexture = outTextures;
+			outTextures = inTextures;
+			outTextures = tempTexture;
+
 			inCount = outCount;
 			outCount = 0;
 
 		}
 	}
 	memcpy(retVerticies,inVerticies,inCount*sizeof(vec4));
+	memcpy(retTextures, inTextures,inCount*sizeof(vec2));
 	*retCount = inCount;
 }
 
@@ -370,17 +384,20 @@ void Rasteriser::Draw()
 
   DepthShader depthShader(this);
 
-  vec4 vetex[3];
+  vec4 vertices[3];
+	vec2 textures[2];
 
 	//todo split into tiles
 	int count;
   int renderCount = model->triangleCount();
 	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
-  for(int i = 0 ; i < renderCount; i++){
+  vec4 * outTextures = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
+
+	for(int i = 0 ; i < renderCount; i++){
     for(int j = 0; j < 3 ;j++){
-      vetex[j] = depthShader.proj(i,j);
+      vertices[j] = depthShader.proj(i,j);
     }
-		Clip(vetex,3,outVerticies, &count);
+		Clip(vertices,3,outVerticies, &count);
 		DrawPolygon(outVerticies, count, depthShader, depthBufferLight, false);
 	}
 
@@ -392,9 +409,12 @@ void Rasteriser::Draw()
   Shadow shadowShader(this, camera_light, modelView);
   for(int i = 0 ; i <renderCount; i++){
     for(int j = 0; j < 3 ;j++){
-      vetex[j] = depthShader.proj(i,j);
+			vec4 v = vec4(model->vertex(i,j),1);
+      vertices[j] = v * modelView * projection;
+			vec2 t = model->textureCoordinate(i,j);
+			textures[j] = t;
     }
-		Clip(vetex,3,outVerticies, &count);
+		Clip(vertices,textures,3,outVerticies,outTextures, &count );
 		DrawPolygon(outVerticies, count, depthShader, depthBufferCamera, true);
   }
 

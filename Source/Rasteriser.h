@@ -48,14 +48,12 @@ private:
 
 		struct Shadow: Shader {
 				Rasteriser * r;
-				glm::mat3x2 textureCoordinates;
 				mat4 screen_shadow;
-				mat3 tri;
         mat3 normals;
 				int t_index;
-				Shadow(Rasteriser * rr, mat4 sc, mat4 modelView) : r(rr) , screen_shadow(sc), tri(0) {};
+				Shadow(Rasteriser * rr, mat4 sc, mat4 modelView) : r(rr) , screen_shadow(sc) {};
 				vec4 proj(int triangle_index, int vertex_index);
-				bool fragment(vec3 bar, vec3 & colour);
+				bool fragment(vec3 bar, mat3 verticies,mat3x2 textureCoordinates ,vec3 & colour);
 		};
 
 
