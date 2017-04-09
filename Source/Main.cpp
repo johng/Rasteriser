@@ -86,8 +86,13 @@ int main(int argc, char* argv[] )
 			r.Draw();
 		}
 	}else{
-
 		r.Draw();
+		int t2 = SDL_GetTicks();
+		float dt = float(t2-t);
+		t = t2;
+		float sf = 0.002f;
+		cout << "Render time: " << dt << " ms." << endl;
+
 	}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
 	return 0;
