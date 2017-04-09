@@ -108,6 +108,49 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 	}
   return vec3(-1,1,1);
 }
+
+void Rasteriser::DrawTriangle(vec4 * vertices, vec2 * inTextures,Shader &shader, float *z_buffer, bool draw_screen){
+
+
+  ivec2 bboxmin(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+  ivec2 bboxmax(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
+
+
+  for (int i = 0; i < 3; i++) {
+
+    vertices[i] = (vertices[i]/vertices[i].w) * viewPort;
+    for (int j = 0; j < 2; j++) {
+      bboxmin[j] = std::min(bboxmin[j], (int)vertices[i][j] );
+      bboxmax[j] = std::max(bboxmax[j], (int)vertices[i][j] );
+    }
+  }
+
+  for (int x = bboxmin.x; x <= bboxmax.x; x++) {
+    for (int y = bboxmin.y; y <= bboxmax.y; y++) {
+
+      if(x < 0 || y < 0 || x > width || y > height){
+        cout << x << "," << y << "\n";
+        continue;
+      }
+
+      vec3 bar = barycentric(vec2(vertices[0].x , vertices[0].y ),
+                             vec2(vertices[1].x , vertices[1].y),
+                             vec2(vertices[2].x , vertices[2].y ),
+                             vec2(x, y));
+
+      float z =  bar.x/vertices[0].z +  bar.y/vertices[1].z  +  bar.z/ vertices[2].z;
+      z = 1/z;
+      if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
+      vec3 colour;
+      shader.fragment(bar, colour);
+      z_buffer[x + y * width] = z;
+      if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
+
+    }
+  }
+
+}
+
 void Rasteriser::DrawPolygon(vec4 * verticies, vec2 * inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen) {
 
 
@@ -143,42 +186,7 @@ void Rasteriser::DrawPolygon(vec4 * verticies, vec2 * inTextures, int polyEdgeCo
       textureCoordinates[2] = inTextures[2 + i];
 
     }
-		ivec2 bboxmin(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-		ivec2 bboxmax(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
-
-
-		for (int i = 0; i < 3; i++) {
-
-			drawVerticies[i] = (drawVerticies[i]/drawVerticies[i].w) * viewPort;
-			for (int j = 0; j < 2; j++) {
-				bboxmin[j] = std::min(bboxmin[j], (int)drawVerticies[i][j] );
-				bboxmax[j] = std::max(bboxmax[j], (int)drawVerticies[i][j] );
-			}
-		}
-
-		for (int x = bboxmin.x; x <= bboxmax.x; x++) {
-			for (int y = bboxmin.y; y <= bboxmax.y; y++) {
-
-				if(x < 0 || y < 0 || x > width || y > height){
-					cout << x << "," << y << "\n";
-					continue;
-				}
-
-				vec3 bar = barycentric(vec2(drawVerticies[0].x , drawVerticies[0].y ),
-															 vec2(drawVerticies[1].x , drawVerticies[1].y),
-															 vec2(drawVerticies[2].x , drawVerticies[2].y ),
-															 vec2(x, y));
-
-				float z =  bar.x/drawVerticies[0].z +  bar.y/drawVerticies[1].z  +  bar.z/ drawVerticies[2].z;
-				z = 1/z;
-				if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
-				vec3 colour;
-				shader.fragment(bar, colour);
-				z_buffer[x + y * width] = z;
-				if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
-
-			}
-		}
+    DrawTriangle(drawVerticies,textureCoordinates,shader,z_buffer,draw_screen);
 	}
 }
 
