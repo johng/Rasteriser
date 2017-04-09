@@ -18,7 +18,7 @@ float yy_camera = 0;
 float xx_light = 0;
 float yy_light = 0;
 
-float r_camera = 0.5;
+float r_camera = 0.6;
 
 int main(int argc, char* argv[] )
 {
@@ -150,21 +150,19 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 		xx_camera += delta_move;
 	}
 
-	float x = sin(xx_camera) * r_camera ;
-  float z = cos(xx_camera) * r_camera ;
-  float y = sin(yy_camera) * r_camera;
 
-	camera.set(vec3(x,yy_camera,z));
+
+
 
 	if( keystate[SDLK_UP] )
 	{
 		// Move camera forward
-		yy_light += delta_move;
+    r_camera += 0.1;
 	}
 	if( keystate[SDLK_DOWN] )
 	{
 		// Move camera backward
-    yy_light -= delta_move;
+    r_camera -= 0.1;
 	}
 	if( keystate[SDLK_RIGHT] )
 	{
@@ -177,7 +175,11 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
     xx_light -= delta_move;
 	}
 
+  float x = sin(xx_camera) * r_camera ;
+  float z = cos(xx_camera) * r_camera ;
+  float y = sin(yy_camera) * r_camera;
 
+  camera.set(vec3(x,yy_camera,z));
 
   x = sin(xx_light) * 20 ;
   z = cos(xx_light) * 20 ;

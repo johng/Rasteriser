@@ -31,7 +31,7 @@ private:
 
 		float * depthBufferCamera;
 		float * depthBufferLight;
-		void DrawTriangle(vec4 * vertices, vec2 * inTextures,Shader &shader, float *z_buffer, bool draw_screen);
+		void DrawTriangle(vec3 * vertices, vec2 * inTextures,Shader &shader, float *z_buffer, bool draw_screen);
 		void DrawPolygon(vec4 * inVertices, vec2 * inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
 		void ViewPort(int x, int y, int w, int h);
