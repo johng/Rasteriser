@@ -32,7 +32,7 @@ private:
 		float * depthBufferCamera;
 		float * depthBufferLight;
 
-		void DrawPolygon(vec4 verticies[3], int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen);
+		void DrawPolygon(vec4 * inVertices, vec2 * inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
 		void ViewPort(int x, int y, int w, int h);
     void Projection(float c);
@@ -51,9 +51,10 @@ private:
 				mat4 screen_shadow;
         mat3 normals;
 				int t_index;
+        vec2 * textures;
 				Shadow(Rasteriser * rr, mat4 sc, mat4 modelView) : r(rr) , screen_shadow(sc) {};
 				vec4 proj(int triangle_index, int vertex_index);
-				bool fragment(vec3 bar, mat3 verticies,mat3x2 textureCoordinates ,vec3 & colour);
+				bool fragment(vec3 bar, vec3 & colour);
 		};
 
 
