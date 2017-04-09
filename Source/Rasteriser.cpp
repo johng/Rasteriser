@@ -131,16 +131,16 @@ void Rasteriser::DrawPolygon(vec4 * verticies, vec2 * inTextures, int polyEdgeCo
 
 		//todo generalise this too
 
-
     drawVerticies[0] = verticies[0];
     drawVerticies[1] = verticies[1+i];
     drawVerticies[2] = verticies[2+i];
 
+
     if(inTextures != NULL) {
 
-      textureCoordinates[0] = verticies[0];
-      textureCoordinates[1] = verticies[1 + i];
-      textureCoordinates[2] = verticies[2 + i];
+      textureCoordinates[0] = inTextures[0];
+      textureCoordinates[1] = inTextures[1 + i];
+      textureCoordinates[2] = inTextures[2 + i];
 
     }
 		ivec2 bboxmin(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
@@ -407,7 +407,9 @@ void Rasteriser::Draw()
   DepthShader depthShader(this);
 
   vec4 vertices[3];
-	vec2 textures[2];
+
+	vec2 textures[3];
+
 
 	//todo split into tiles
 	int count;
@@ -421,6 +423,7 @@ void Rasteriser::Draw()
     }
 		Clip(vertices,NULL,3,outVerticies,NULL, &count);
 		DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, false);
+
 	}
 
   LookAt(camera_pos, center, up);
