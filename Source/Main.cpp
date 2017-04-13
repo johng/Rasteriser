@@ -18,7 +18,7 @@ float yy_camera = 0;
 float xx_light = 0;
 float yy_light = 0;
 
-float r_camera = 0.6;
+float r_camera = 5;
 
 int main(int argc, char* argv[] )
 {
@@ -92,6 +92,7 @@ int main(int argc, char* argv[] )
 		t = t2;
 		float sf = 0.002f;
 		cout << "Render time: " << dt << " ms." << endl;
+		cout << "Camera: " <<  camera << endl;
 
 	}
 	SDL_SaveBMP( screen, "screenshot.bmp" );
@@ -114,7 +115,7 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	}
 	Uint8* keystate = SDL_GetKeyState( 0 );
 
-	float delta_move = 0.25f;
+	float delta_move = 0.1f;
 
 	vec3 forward (0,0,1);
 	vec3 down (0,1,0);

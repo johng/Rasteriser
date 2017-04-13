@@ -147,8 +147,10 @@ void Rasteriser::DrawTriangle(vec3 * vertices, vec2 * inTextures,Shader &shader,
                              vec2(vertices[2].x , vertices[2].y ),
                              vec2(x, y));
 
+      //float z =  bar.x * vertices[0].z +  bar.y * vertices[1].z  +  bar.z * vertices[2].z;
       float z =  bar.x/vertices[0].z +  bar.y/vertices[1].z  +  bar.z/ vertices[2].z;
       z = 1/z;
+
       if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
       vec3 colour;
       shader.fragment(bar, colour);
@@ -403,10 +405,12 @@ void Rasteriser::Draw()
 		depthBufferLight[i] = -INFINITY;
 	}
 
+  vec3 diff(0,0,1);
   vec3 center(0,0,0);
   vec3 up(0,1,0);
   light_pos = lighting.position();
   camera_pos = camera.position();
+  center = camera_pos - diff;
   light_colour = lighting.colour();
   ViewPort(0, 0, width, height);
 
