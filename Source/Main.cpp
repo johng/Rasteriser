@@ -31,7 +31,12 @@ int main(int argc, char* argv[] )
 
 
 
+  model.LoadMaterialsFile("./Models/cornell-box/CornellBox-Original.mtl");
+
+
 	model.LoadObj("./Models/Diablo/diablo3_pose.obj");
+
+  exit(-1);
   model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
   model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
 	model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
