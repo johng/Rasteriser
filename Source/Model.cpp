@@ -11,7 +11,7 @@ bool Model::LoadObj(const char * filename)
 {
 
   bool debug = false;
-
+  char current_material[20];
   std::ifstream ifs(filename);
   std::string line;
   while (std::getline(ifs, line))
@@ -42,6 +42,14 @@ bool Model::LoadObj(const char * filename)
       for(int i=0; i<3; i++) ss >> vn[i];
       vns.push_back(vn);
     }
+
+    if (line.compare(0,5, "ustmtl") == 0)
+    {
+      ss.ignore(0);
+
+
+    }
+
     if (line.compare(0, 2, "f ") == 0) //something else
     {
       ss.ignore();
@@ -81,12 +89,23 @@ bool Model::LoadObj(const char * filename)
   }
 }
 
+bool Model::LoadMaterialsFile(const char *filename){
+
+  Material m;
+  m.ReadMaterial(filename);
+  material = m;
+
+  return true;
+
+}
+
 
 bool Model::LoadDiffuseTexture(const char *filename) {
 
   Texture texture;
   texture.ReadTGAImage(filename);
   diffuse = texture;
+  loadedDiffuseTexture = true;
 
 }
 
@@ -95,6 +114,7 @@ bool Model::LoadNormalMap(const char * filename){
   Texture texture;
   texture.ReadTGAImage(filename);
   normal = texture;
+  loadedNormalTexture = true;
 }
 
 
@@ -102,6 +122,7 @@ bool Model::LoadSpecularTexture(const char * filename){
   Texture texture;
   texture.ReadTGAImage(filename);
   specular = texture;
+  loadedNormalTexture = true;
 }
 
 

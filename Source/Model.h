@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "Triangle.h"
 #include "Texture.h"
+#include "Material.h"
 #include <vector>
 
 class Model {
@@ -12,16 +13,25 @@ private:
     Texture diffuse;
     Texture normal;
     Texture specular;
+    Material material;
     std::vector<Triangle> triangles;
     std::vector<glm::vec3> vns;
     std::vector<glm::vec2> vts;
     std::vector<glm::vec3> vs;
 
 public:
+
+    bool loadedNormalTexture = 0;
+    bool loadedSpecularTexture = 0;
+    bool loadedDiffuseTexture = 0;
+    bool loadedMaterialFile = 0;
+
     bool LoadObj(const char * filename);
     bool LoadDiffuseTexture ( const char * filename);
     bool LoadSpecularTexture ( const char * filename);
     bool LoadNormalMap(const char * filename);
+    bool LoadMaterialsFile(const char * filename);
+
 
     int triangleCount();
     glm::vec3 vertex(int triangle, int index);

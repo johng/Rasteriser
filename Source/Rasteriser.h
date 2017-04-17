@@ -27,6 +27,8 @@ protected:
 		Camera &camera;
 		Lighting &lighting;
     Model * model;
+
+
 private:
 
 		float * depthBufferCamera;
