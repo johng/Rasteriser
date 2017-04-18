@@ -32,7 +32,9 @@ public:
     bool LoadNormalMap(const char * filename);
     bool LoadMaterialsFile(const char * filename);
 
-    glm::vec3 diffuseMaterial(int index);
+    glm::vec3 ambiantReflectance(int index);
+    glm::vec3 specularReflectance(int index);
+    glm::vec3 diffuseReflectance(int index);
 
     int triangleCount();
     glm::vec3 vertex(int triangle, int index);

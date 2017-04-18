@@ -33,7 +33,7 @@ private:
 
 		float * depthBufferCamera;
 		float * depthBufferLight;
-		void DrawTriangle(vec3 *vertices, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen);
+		void DrawTriangle(vec4 *vertices, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen);
 		void DrawPolygon(vec4 *inVertices, vec2 *inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, Polygon *triangle,
                          bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
@@ -51,7 +51,7 @@ private:
 		struct Shadow: Shader {
 				Rasteriser * r;
 				mat4 screen_shadow;
-				Shadow(Rasteriser * rr, mat4 sc, mat4 modelView) : r(rr) , screen_shadow(sc) {};
+				Shadow(Rasteriser * rr, mat4 sc) : r(rr) , screen_shadow(sc) {};
 				bool colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle);
 		};
 

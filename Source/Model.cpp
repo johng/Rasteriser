@@ -115,9 +115,20 @@ bool Model::LoadMaterialsFile(const char *filename){
 
 }
 
-glm::vec3 Model::diffuseMaterial(int index){
+glm::vec3 Model::ambiantReflectance(int index){
   return material.data[index].Ka;
 }
+
+glm::vec3 Model::diffuseReflectance(int index){
+  return material.data[index].Kd;
+}
+
+
+glm::vec3 Model::specularReflectance(int index){
+  return material.data[index].Ks;
+}
+
+
 
 bool Model::LoadDiffuseTexture(const char *filename) {
 
