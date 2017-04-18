@@ -8,18 +8,8 @@
 vec2 textureCoordinates[3];
 vec3 drawVerticies[3];
 
-vec4 Rasteriser::DepthShader::proj(int triangle_index, int index) {
 
-  vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
-  vec4 retval = vertex * modelView * projection ;
-  //vec4 retval = vertex * modelView * projection * viewPort;
-  for(int i = 0; i < 3 ; i ++){
-    //tri[i][index] = retval[i]/retval.w;
-  }
-  return retval;
-}
-
-bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
+bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle) {
   //vec3 p = bar*tri;
   //colour = vec3(1, 1, 1)*(p.z/depth);
   colour = vec3(255, 255, 255);
@@ -27,18 +17,7 @@ bool Rasteriser::DepthShader::fragment(vec3 bar, vec3 & colour) {
 }
 
 
-vec4 Rasteriser::Shadow::proj(int triangle_index, int index) {
-
-  vec4 vertex = vec4(r->model->vertex(triangle_index,index),1);
-  vec4 retval = vertex * modelView * projection ;
-  //vec4 retval = vertex * modelView * projection * viewPort;
-  for(int i = 0; i < 3 ; i ++){
-    //tri[i][index] = retval[i]/retval.w;
-  }
-  return retval;
-}
-
-bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
+bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle) {
 
   //vec4 p = vec4(1,1,1,1) ;
 
@@ -58,35 +37,49 @@ bool Rasteriser::Shadow::fragment(vec3 bar, vec3 & colour) {
 
   vec2 textureCoordInterp =  text * bar;
 
-  vec4 normal = vec4(r->model->normalMapTexture(textureCoordInterp),1); // normal
+
+  if(r->model->loadedNormalTexture){
 
 
-	mat4 mm = transpose(inverse( modelView * projection));
+    vec4 normal = vec4(r->model->normalMapTexture(textureCoordInterp),1); // normal
 
-	vec3 vv = vec3( normal*mm);
-	vec3 n =  normalize( vv);
-  vec3 ll =  vec4(r->light_pos,1) * modelView ;
-  vec3 l = normalize(ll);
-	float ttt = glm::dot(n,l)*2.0f;
-	vec3 tt = n*ttt - l;
-	vec3 ref = normalize(tt);
-  float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
-  float diff = std::max<float>(0.f, glm::dot(n,l));
+    mat4 mm = transpose(inverse( modelView * projection));
 
-	unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
+    vec3 vv = vec3( normal*mm);
+    vec3 n =  normalize( vv);
+    vec3 ll =  vec4(r->light_pos,1) * modelView ;
+    vec3 l = normalize(ll);
+    float ttt = glm::dot(n,l)*2.0f;
+    vec3 tt = n*ttt - l;
+    vec3 ref = normalize(tt);
+    float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
+    float diff = std::max<float>(0.f, glm::dot(n,l));
 
-  if(idx >= 0 && idx < r->width*r->height) {
+    unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
-    float shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < p[2] + 20);
+    if(idx >= 0 && idx < r->width*r->height) {
 
-    //for (int i=0; i<3; i++) colour[i] =  c[i] ;
-    for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*( 0.6f* spec+ 1.0f*diff), 255);
+      float shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < p[2] + 20);
+
+      //for (int i=0; i<3; i++) colour[i] =  c[i] ;
+      for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*( 0.6f* spec+ 1.0f*diff), 255);
 
 
-    //colour = intensity * std::min<float>(shadow, 1) * cc ;
-	}else{
-    colour = vec3(0,0,0);
+      //colour = intensity * std::min<float>(shadow, 1) * cc ;
+    }else{
+      colour = vec3(0,0,0);
+    }
+
+  }else{
+
+    if(triangle->material>=0){
+      colour = r->model->diffuseMaterial(triangle->material) * (float)255;
+    }else{
+      colour = vec3(0,0,0);
+    }
   }
+
+
 
   return true;
 }
@@ -118,28 +111,28 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
   return vec3(-1,1,1);
 }
 
-void Rasteriser::DrawTriangle(vec3 * vertices, vec2 * inTextures,Shader &shader, float *z_buffer, bool draw_screen){
+void Rasteriser::DrawTriangle(vec3 *inVerticies, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen) {
 
 
   ivec2 bboxmin(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
   ivec2 bboxmax(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
 
-
+  vec4 vertices[3];
   for (int i = 0; i < 3; i++) {
 
-    vertices[i] = vec4(vertices[i],1) * viewPort;
+    vertices[i] = vec4(inVerticies[i],1) * viewPort;
     for (int j = 0; j < 2; j++) {
       bboxmin[j] = std::min(bboxmin[j], (int)vertices[i][j] );
       bboxmax[j] = std::max(bboxmax[j], (int)vertices[i][j] );
     }
   }
 
-  for (int x = bboxmin.x; x <= bboxmax.x; x++) {
-    for (int y = bboxmin.y; y <= bboxmax.y; y++) {
+  for (int x = 0; x < 500; x++) {
+    for (int y = 0; y < 500; y++) {
 
-      if(x < 0 || y < 0 || x > width || y > height){
+      if(x < 0 || y < 0 || x >= width || y >= height){
         cout << x << "," << y << "\n";
-        continue;
+        //continue;
       }
 
       vec3 bar = barycentric(vec2(vertices[0].x , vertices[0].y ),
@@ -153,7 +146,7 @@ void Rasteriser::DrawTriangle(vec3 * vertices, vec2 * inTextures,Shader &shader,
 
       if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
       vec3 colour;
-      shader.fragment(bar, colour);
+      shader.colour(bar, colour, triangle);
       z_buffer[x + y * width] = z;
       if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
 
@@ -164,22 +157,17 @@ void Rasteriser::DrawTriangle(vec3 * vertices, vec2 * inTextures,Shader &shader,
 
 //todo make this non global
 
-void Rasteriser::DrawPolygon(vec4 * verticies, vec2 * inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen) {
+void
+Rasteriser::DrawPolygon(vec4 *verticies, vec2 *inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, Polygon *triangle,
+                        bool draw_screen) {
 
 
-	int triangleCount = 1;
 
 	if(polyEdgeCount == 0){
 		return;
 	}
 
-	//todo generalise this
-	if(polyEdgeCount == 4){
-		triangleCount = 2;
-	}else if(polyEdgeCount == 5){
-		triangleCount = 3;
-	}
-
+  int triangleCount = polyEdgeCount - 2;
 
 	for(int i = 0 ; i < triangleCount ; i ++) {
 
@@ -194,7 +182,7 @@ void Rasteriser::DrawPolygon(vec4 * verticies, vec2 * inTextures, int polyEdgeCo
       textureCoordinates[1] = inTextures[1 + i];
       textureCoordinates[2] = inTextures[2 + i];
     }
-    DrawTriangle(drawVerticies,textureCoordinates,shader,z_buffer,draw_screen);
+    DrawTriangle(drawVerticies, textureCoordinates, shader, z_buffer, triangle, draw_screen);
 	}
 }
 
@@ -319,7 +307,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 		for (int i = 0; i < 2; i++) {
 
 			//Exit if we have clipped all vertices
-			if(inCount == 0){
+			if(inCount < 1){
 				*retCount = 0;
 				return;
 			}
@@ -374,10 +362,14 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 			outVertices = inVerticies;
 			inVerticies = tempVertices;
 
+      if(retTextures != NULL) {
 
-			tempTexture = outTextures;
-			outTextures = inTextures;
-			inTextures = tempTexture;
+        tempTexture = outTextures;
+        outTextures = inTextures;
+        inTextures = tempTexture;
+
+      }
+
 
 			inCount = outCount;
 			outCount = 0;
@@ -387,6 +379,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 	memcpy(retVerticies,inVerticies,inCount*sizeof(vec4));
 	if(retTextures!=NULL)memcpy(retTextures, inTextures,inCount*sizeof(vec2));
 	*retCount = inCount;
+
 }
 
 
@@ -405,12 +398,35 @@ void Rasteriser::Draw()
 		depthBufferLight[i] = -INFINITY;
 	}
 
-  vec3 diff(0,0,1);
+
   vec3 center(0,0,0);
+
+ float angle = camera.angle ;
   vec3 up(0,1,0);
+
+
+
+
   light_pos = lighting.position();
   camera_pos = camera.position();
-  center = camera_pos - diff;
+
+  center = camera_pos - center;
+
+  center.y = 0;
+  float c = 1.0f;
+  float l = (float)length(center);
+  center.x  -=  center.x / l;
+  center.z  -=  center.z / l;
+  //center.y = 0;
+  cout << camera ;
+  center.y = camera_pos.y;
+  cout << "center :" ;
+  cout << center.x << ","<< center.y << ","<< center.z << ":";
+
+  cout << length(camera_pos-center);
+  cout  << endl;
+
+  //center = vec3(4.95,0,4.95);
   light_colour = lighting.colour();
   ViewPort(0, 0, width, height);
 
@@ -422,9 +438,9 @@ void Rasteriser::Draw()
 
   DepthShader depthShader(this);
 
-  vec4 vertices[3];
+  vec4 vertices[4];
 
-	vec2 textures[3];
+	vec2 textures[4];
 
 
 	//todo split into tiles
@@ -434,11 +450,15 @@ void Rasteriser::Draw()
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
 
 	for(int i = 0 ; i < renderCount; i++){
-    for(int j = 0; j < 3 ;j++){
-      vertices[j] = depthShader.proj(i,j);
+
+    Polygon * triangle = model->GetTriangle(i);
+
+    for(int j = 0; j < triangle->verticesCount ;j++){
+      vec4 v = vec4(model->vertex(i,j),1);
+      vertices[j] = v * modelView * projection;
     }
-		Clip(vertices,NULL,3,outVerticies,NULL, &count);
-		DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, false);
+		//Clip(vertices,NULL,triangle->verticesCount,outVerticies,NULL, &count);
+    //DrawPolygon(vertices, NULL, 4, depthShader, depthBufferLight, triangle, false);
 
 	}
 
@@ -449,14 +469,19 @@ void Rasteriser::Draw()
 
   Shadow shadowShader(this, camera_light_transform, modelView);
   for(int i = 0 ; i <renderCount; i++){
-    for(int j = 0; j < 3 ;j++){
+    Polygon * triangle = model->GetTriangle(i);
+    for(int j = 0; j < triangle->verticesCount ;j++){
 			vec4 v = vec4(model->vertex(i,j),1);
       vertices[j] = v * modelView * projection;
-			vec2 t = model->textureCoordinate(i,j);
-			textures[j] = t;
+      if(model->loadedNormalTexture) {
+        vec2 t = model->textureCoordinate(i, j);
+        textures[j] = t;
+      }else{
+        outTextures = NULL;
+      }
     }
-		Clip(vertices,textures,3,outVerticies,outTextures, &count );
-		DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, true);
+		Clip(vertices,textures,triangle->verticesCount,outVerticies,outTextures, &count );
+    DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
   }
 
   if (SDL_MUSTLOCK(screen)) {

@@ -2,7 +2,7 @@
 #define OBJ_IMPORTER_H
 
 #include <glm/glm.hpp>
-#include "Triangle.h"
+#include "Polygon.h"
 #include "Texture.h"
 #include "Material.h"
 #include <vector>
@@ -14,7 +14,7 @@ private:
     Texture normal;
     Texture specular;
     Material material;
-    std::vector<Triangle> triangles;
+    std::vector<Polygon> triangles;
     std::vector<glm::vec3> vns;
     std::vector<glm::vec2> vts;
     std::vector<glm::vec3> vs;
@@ -32,6 +32,7 @@ public:
     bool LoadNormalMap(const char * filename);
     bool LoadMaterialsFile(const char * filename);
 
+    glm::vec3 diffuseMaterial(int index);
 
     int triangleCount();
     glm::vec3 vertex(int triangle, int index);
@@ -41,6 +42,8 @@ public:
     unsigned char * diffuseTexture(glm::vec2 textureCoordinate);
     glm::vec3 normalMapTexture(glm::vec2 textureCoordinate);
     float specularTexture(glm::vec2 textureCoordinate);
+
+    Polygon * GetTriangle(int triangle);
 };
 
 

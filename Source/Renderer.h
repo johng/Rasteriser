@@ -1,7 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "Triangle.h"
+#include "Polygon.h"
 #include "SDLauxiliary.h"
 #include "Camera.h"
 #include "Lighting.h"
@@ -15,8 +15,7 @@ public:
 
 		struct Shader {
 				virtual ~Shader();
-				virtual vec4 proj(int triangle_index, int vertex_index) = 0;
-				virtual bool fragment(vec3 bar, vec3 & colour) =0;
+				virtual bool colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle) =0;
 		};
 
 		Renderer(SDL_Surface* screen);

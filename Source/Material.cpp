@@ -25,7 +25,7 @@ bool Material::ReadMaterial(const char *filename) {
 
     if (line.compare(0, 6, "newmtl") == 0) //This is a vertex
     {
-      ss.ignore(1);
+      ss.ignore(6);
 
       std::istream_iterator<char> it(ss);
       std::istream_iterator<char> end;
@@ -33,7 +33,7 @@ bool Material::ReadMaterial(const char *filename) {
       e = Entry();
       data.push_back(e);
       materialNameMap[results] = count++;
-      //cout << materialNameMap[results];
+      cout << results << ":" << count-1 << endl;
 
     }
 

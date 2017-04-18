@@ -3,7 +3,7 @@
 
 #include "Renderer.h"
 #include "Lighting.h"
-#include "Triangle.h"
+#include "Polygon.h"
 #include "SDLauxiliary.h"
 #include "Model.h"
 #include <glm/glm.hpp>
@@ -33,8 +33,9 @@ private:
 
 		float * depthBufferCamera;
 		float * depthBufferLight;
-		void DrawTriangle(vec3 * vertices, vec2 * inTextures,Shader &shader, float *z_buffer, bool draw_screen);
-		void DrawPolygon(vec4 * inVertices, vec2 * inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, bool draw_screen);
+		void DrawTriangle(vec3 *vertices, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen);
+		void DrawPolygon(vec4 *inVertices, vec2 *inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, Polygon *triangle,
+                         bool draw_screen);
 		void LookAt(vec3 eye, vec3 center, vec3 up);
 		void ViewPort(int x, int y, int w, int h);
     void Projection(float c);
@@ -44,19 +45,14 @@ private:
 				Rasteriser *r;
 				mat3 tri;
 				DepthShader(Rasteriser *rr) : r(rr),tri(0) {}
-				vec4 proj(int triangle_index, int j);
-				bool fragment(vec3 bar, vec3 & colour);
+				bool colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle);
 		};
 
 		struct Shadow: Shader {
 				Rasteriser * r;
 				mat4 screen_shadow;
-        mat3 normals;
-				int t_index;
-        vec2 * textures;
 				Shadow(Rasteriser * rr, mat4 sc, mat4 modelView) : r(rr) , screen_shadow(sc) {};
-				vec4 proj(int triangle_index, int vertex_index);
-				bool fragment(vec3 bar, vec3 & colour);
+				bool colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle);
 		};
 
 

@@ -18,11 +18,11 @@ private:
 		vec3 pos;
 
 public:
-
+    float angle;
     mat3 R_x, R_y;
 
     Camera (vec3 pos);
-
+    void angleDelta(float a);
     void move (vec3 move);
 		void set(vec3 pos);
     void rotate (float, float);
