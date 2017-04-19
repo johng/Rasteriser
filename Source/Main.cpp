@@ -27,14 +27,22 @@ int main(int argc, char* argv[] )
   //tgaImage.ReadTGAImage("./Models/Diablo/diablo3_pose_diffuse.tga");
 
 	Model model;
-	//model.LoadObj("./Models/cornell-box/CornellBox-Glossy.obj");
+
+  //model.LoadMaterialsFile("./Models/cornell-box/CornellBox-Empty-RG.mtl");
+  //model.LoadObj("./Models/cornell-box/CornellBox-Empty-RG.obj");
+
+
+  model.LoadMaterialsFile("./Models/cornell-box/CornellBox-Original.mtl");
+  model.LoadObj("./Models/cornell-box/CornellBox-Original.obj");
+
+	//model.LoadObj("./Models/Diablo/diablo3_pose.obj");
+	//model.LoadObj("./Models/cornell-box/CornellBox-Empty-RG.obj");
 
 
 
-	model.LoadObj("./Models/Diablo/diablo3_pose.obj");
-  model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
-  model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
-	model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
+  //model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
+  //model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
+	//model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
 
 
 
@@ -57,15 +65,15 @@ int main(int argc, char* argv[] )
 
 	}
 
-	Camera camera(vec3(1,1,4));
+	Camera camera(vec3(0,1,2.5));
 
 	float x = sin(xx_camera) * r_camera ;
 	float z = cos(xx_camera) * r_camera ;
 	float y = sin(yy_camera) * r_camera;
 
-	camera.set(vec3(x,yy_camera,z));
-
-	Lighting lighting(vec3(1,1,1), vec3(1,1,1)*14.0f);
+	//camera.set(vec3(x,yy_camera,z));
+	//camera.set(vec3(2.11498,1,1.67835));
+	Lighting lighting(vec3(0,1,2.5), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
@@ -168,12 +176,12 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	if( keystate[SDLK_RIGHT] )
 	{
 		// Move camera to the left
-		xx_light += delta_move;
+		camera.angle += delta_move;
 	}
 	if( keystate[SDLK_LEFT] )
 	{
 		// Move camera to the right
-    xx_light -= delta_move;
+    camera.angle -= delta_move;
 	}
 
   float x = sin(xx_camera) * r_camera ;
