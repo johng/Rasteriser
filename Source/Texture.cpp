@@ -5,6 +5,7 @@
 #include "Texture.h"
 #include<iostream>
 #include<fstream>
+#include <string.h>
 
 using namespace std;
 
@@ -56,10 +57,8 @@ bool Texture::ReadTGAImage(const char *filename) {
 
         count -= 127;
         unsigned char pixelInfo[4];
-				unsigned char * ptr;
         for (int b = 0; b < bytesPerPixel; b++) {
           pixelInfo[b] = (unsigned char) stream.get();
-					ptr = &pixelInfo[b];
         }
 
         for (int item = 0; item < count; item++) {

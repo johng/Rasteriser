@@ -67,9 +67,9 @@ int main(int argc, char* argv[] )
 
 	Camera camera(vec3(0.5,1,3));
 
-	float x = sin(xx_camera) * r_camera ;
-	float z = cos(xx_camera) * r_camera ;
-	float y = sin(yy_camera) * r_camera;
+	//float x = sin(xx_camera) * r_camera ;
+	//float z = cos(xx_camera) * r_camera ;
+	//float y = sin(yy_camera) * r_camera;
 
 	//camera.set(vec3(x,yy_camera,z));
 	//camera.set(vec3(2.11498,1,1.67835));
@@ -85,7 +85,7 @@ int main(int argc, char* argv[] )
 	Rasteriser r (screen, &model,camera,lighting) ;
 
 	//A bit of a hack to flush initial events
-	SDL_Event e;
+	//SDL_Event e;
 	//while( SDL_PollEvent(&e) );
 
 	if(show_screen) {
@@ -98,7 +98,6 @@ int main(int argc, char* argv[] )
 		int t2 = SDL_GetTicks();
 		float dt = float(t2-t);
 		t = t2;
-		float sf = 0.002f;
 		cout << "Render time: " << dt << " ms." << endl;
 		cout << "Camera: " <<  camera << endl;
 
@@ -114,7 +113,7 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	int t2 = SDL_GetTicks();
 	float dt = float(t2-t);
 	t = t2;
-	float sf = 0.002f;
+	//float sf = 0.002f;
 
 	if(debug) {
 		cout << "Render time: " << dt << " ms." << endl;
@@ -185,8 +184,8 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	}
 
   float x = sin(xx_camera) * r_camera ;
-  float z = cos(xx_camera) * r_camera ;
   float y = sin(yy_camera) * r_camera;
+  float z = cos(xx_camera) * r_camera ;
 
   camera.set(vec3(x,yy_camera,z));
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <iterator>
 
 using namespace std;
 using namespace glm;
@@ -31,7 +32,7 @@ bool Model::LoadObj(const char * filename)
     if (line.compare(0, 3, "vt ") == 0) //This is a texture coordinate
     {
       ss.ignore(2);
-      glm::vec3 vt;
+      glm::vec2 vt;
       for(int i=0; i<2; i++) ss >> vt[i];
 
       vts.push_back(vt);

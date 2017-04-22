@@ -41,16 +41,12 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   float shadow = 1;
 
-  int xx = int(light[0]);
+  int xx = int(light[0]); //Indexes into light buffer
   int yy = int(light[1]);
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
     shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 40);
-  }else{
-    if(yy < 0 || xx < 0) {
-      int a = 12;
-    }
   }
 
   mat3x2 text;
@@ -69,7 +65,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     vec3 vv = vec3( normal*mm);
     vec3 n =  normalize( vv);
-    vec3 ll =  vec4(r->light_pos,1) * modelView ;
+    vec3 ll = (vec3)(vec4(r->light_pos,1) * modelView);
     vec3 l = normalize(ll);
     float ttt = glm::dot(n,l)*2.0f;
     vec3 tt = n*ttt - l;
@@ -89,28 +85,28 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
-      glm::vec3 e1 = m[1]-m[0];
-      glm::vec3 e2 = m[2]-m[1];
-      vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
+      //vec3 e1 = (vec3)(m[1]-m[0]);
+      //vec3 e2 = (vec3)(m[2]-m[1]);
+      //vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
 
       vec3 ambient(1,1,1);
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
-      vec3 kd = r->model->diffuseReflectance(triangle->material);
-      vec3 ks = r->model->specularReflectance(triangle->material);
+      //vec3 kd = r->model->diffuseReflectance(triangle->material);
+      //vec3 ks = r->model->specularReflectance(triangle->material);
 
-      vec3 aa = (m*bar);
+      //vec3 aa = (vec3)(m*bar);
 
-      float l = length( aa - r->light_pos) ;
+      //float l = length( aa - r->light_pos) ;
 
-      float norm = glm::dot(normal , r->light_pos);
+      //float norm = glm::dot(normal , r->light_pos);
 
       for(int i = 0 ; i < 3;i++){
         //colour[i] = std::min<float>(( shadow * ka[i] * ambient[i] + kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
         colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
-      int a = 2;
+      //int a = 2;
 
       /* Ka * Ia + Kd * (N * L0) * Ij
        *
@@ -451,7 +447,7 @@ void Rasteriser::Draw()
 
   vec3 center(0,0,0);
 
- float angle = camera.angle ;
+  //float angle = camera.angle ;
   vec3 up(0,1,0);
 
 
@@ -463,7 +459,7 @@ void Rasteriser::Draw()
   center = camera_pos - center;
 
   center.y = 0;
-  float c = 1.0f;
+  //float c = 1.0f;
   float l = (float)length(center);
   center.x  -=  center.x / l;
   center.z  -=  center.z / l;

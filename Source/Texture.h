@@ -2,7 +2,7 @@
 #define COMPUTER_GRAPHICS_TGAIMAGE_H
 
 
-#include <tic.h>
+//#include <tic.h>
 #include <cstdint>
 
 struct TGAHeader
