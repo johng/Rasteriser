@@ -24,15 +24,20 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
   m[1] = drawVerticies[1];
   m[2] = drawVerticies[2];
 
+
+
   mat3x4 mm;
   for(int i =0;i<3;i++){
-    mm[i] = m[i] * screen_shadow;
-    mm[i] = mm[i]/mm[i].w * viewPort;
+    mm[i] = m[i]/m[i] * screen_shadow * viewPort;
+
   }
 
-  vec4 aad = mm * bar;
+  vec4 aad = m * bar;
 
-  vec4 light =  aad ;
+  aad = aad * screen_shadow * viewPort;
+
+
+  vec4 light =  aad / aad.w ;
 
   float shadow = 1;
 
@@ -41,7 +46,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 44);
+    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 40);
   }else{
     if(yy < 0 || xx < 0) {
       int a = 12;
@@ -487,6 +492,7 @@ void Rasteriser::Draw()
 
 	vec2 textures[4];
 
+  bool clip = false;
 
 	int count;
   int renderCount = model->triangleCount();
@@ -501,8 +507,13 @@ void Rasteriser::Draw()
       vec4 v = vec4(model->vertex(i,j),1);
       vertices[j] = v * modelView * projection;
     }
-		Clip(vertices,NULL,triangle->verticesCount,outVerticies,NULL, &count);
-    DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, triangle, false);
+    if(clip) {
+      Clip(vertices, NULL, triangle->verticesCount, outVerticies, NULL, &count);
+      DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, triangle, false);
+
+    }else{
+      DrawPolygon(vertices, NULL, triangle->verticesCount, depthShader, depthBufferLight, triangle, false);
+    }
 
 	}
 
@@ -524,9 +535,12 @@ void Rasteriser::Draw()
         outTextures = NULL;
       }
     }
-		Clip(vertices,textures,triangle->verticesCount,outVerticies,outTextures, &count );
-    DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
-    //DrawPolygon(vertices, outTextures, triangle->verticesCount, shadowShader, depthBufferCamera, triangle, true);
+		if(clip) {
+      Clip(vertices, textures, triangle->verticesCount, outVerticies, outTextures, &count);
+      DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
+    }else{
+      DrawPolygon(vertices, outTextures, triangle->verticesCount, shadowShader, depthBufferCamera, triangle, true);
+    }
   }
 
   if (SDL_MUSTLOCK(screen)) {

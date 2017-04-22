@@ -65,7 +65,7 @@ int main(int argc, char* argv[] )
 
 	}
 
-	Camera camera(vec3(0,1,2.5));
+	Camera camera(vec3(0.5,1,3));
 
 	float x = sin(xx_camera) * r_camera ;
 	float z = cos(xx_camera) * r_camera ;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[] )
 
 	//camera.set(vec3(x,yy_camera,z));
 	//camera.set(vec3(2.11498,1,1.67835));
-	Lighting lighting(vec3(0,1,2.5), vec3(1,1,1)*14.0f);
+	Lighting lighting(vec3(0,1,4), vec3(1,1,1)*14.0f);
 
 	SDL_Surface *screen = InitializeSDL( SCREEN_WIDTH, SCREEN_HEIGHT );
 	int t = SDL_GetTicks();	// Set start value for timer.
