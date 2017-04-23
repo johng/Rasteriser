@@ -32,12 +32,12 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   }
 
-  vec4 aad = m * bar;
+  vec4 tri_bar = m * bar;
 
-  aad = aad * screen_shadow * viewPort;
+  tri_bar = tri_bar * screen_shadow * viewPort;
 
 
-  vec4 light =  aad / aad.w ;
+  vec4 light =  tri_bar / tri_bar.w ;
 
   float shadow = 1;
 
@@ -46,7 +46,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 40);
+    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 20);
   }
 
   mat3x2 text;
@@ -106,6 +106,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
         colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
+      //todo implement the rest of the shadaing for the othger mateterial types;
       //int a = 2;
 
       /* Ka * Ia + Kd * (N * L0) * Ij
@@ -498,6 +499,8 @@ void Rasteriser::Draw()
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));
 
+
+  //Transform from camera space to light space
   mat4 camera_light_transform = inverse(modelView * projection) * MM ;
 
   Shadow shadowShader(this, camera_light_transform);
