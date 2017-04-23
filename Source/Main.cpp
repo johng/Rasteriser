@@ -13,12 +13,12 @@ const int SCREEN_HEIGHT = 500;
 
 
 float xx_camera = 0;
-float yy_camera = 0;
+float yy_camera = 1;
 
 float xx_light = 0;
 float yy_light = 0;
 
-float r_camera = 5;
+float r_camera = 3;
 
 int main(int argc, char* argv[] )
 {

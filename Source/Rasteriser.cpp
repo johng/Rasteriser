@@ -440,11 +440,7 @@ void Rasteriser::Draw()
 
 
   vec3 center(0,0,0);
-
-  //float angle = camera.angle ;
   vec3 up(0,1,0);
-
-
 
 
   light_pos = lighting.position();
