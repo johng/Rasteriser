@@ -158,27 +158,28 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 		//Divide this by the are of two vertices and the test point to get baycentric value
 		return vec3(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
 	}
-  return vec3(-1,1,1);
+  //Else return negative values, so our check fails
+  return vec3(-1,-1,-1);
 }
 
 void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen) {
 
 
-  ivec2 bboxmin(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-  ivec2 bboxmax(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
+  ivec2 min(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+  ivec2 max(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
 
   vec4 vertices[3];
   for (int i = 0; i < 3; i++) {
 
     vertices[i] = inVerticies[i]/inVerticies[i].w * viewPort;
     for (int j = 0; j < 2; j++) {
-      bboxmin[j] = std::min(bboxmin[j], (int)vertices[i][j] );
-      bboxmax[j] = std::max(bboxmax[j], (int)vertices[i][j] );
+      min[j] = std::min(min[j], (int)vertices[i][j] );
+      max[j] = std::max(max[j], (int)vertices[i][j] );
     }
   }
 
-  for (int y = bboxmin.y; y <= bboxmax.y; y++) {
-    for (int x = bboxmin.x; x <= bboxmax.x; x++) {
+  for (int y = min.y; y <= max.y; y++) {
+    for (int x = min.x; x <= max.x; x++) {
 
       if(x < 0 || y < 0 || x >= width || y >= height){
         cout << x << "," << y << "\n";
@@ -269,15 +270,8 @@ inline float cross (vec2 a , vec2 b){
 	return a.x * b.y - a.y * b.x;
 }
 
-inline bool rhs(vec2 a, vec2 b, vec2 p){
-	vec2 t1, t2;
-	t1 = b -a;
-	t2 = p -b;
-	float x = cross(t1,t2);
-	return x <= 0;
-}
 
-#define W_CLIP 0.0000001
+#define W_CLIP 0.00001
 
 //todo find an efficient way of rendering without textures
 void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVerticies, vec2 * retTextures , int * retCount) {
@@ -459,36 +453,28 @@ void Rasteriser::Draw()
   center = camera_pos - center;
 
   center.y = 0;
+
+  //Adjust the center, so we're look at the origin of the model
   //float c = 1.0f;
   float l = (float)length(center);
   center.x  -=  center.x / l;
   center.z  -=  center.z / l;
-  //center.y = 0;
-  cout << camera ;
   center.y = camera_pos.y;
-  cout << "center :" ;
-  cout << center.x << ","<< center.y << ","<< center.z << ":";
 
-  cout << length(camera_pos-center);
-  cout  << endl;
-
-  //center = vec3(4.95,0,4.95);
   light_colour = lighting.colour();
   ViewPort(0, 0, width, height);
 
   LookAt(light_pos, center, up);
-  //Projection(0);
 
-
+  //Store the transformation for use in the shader
   mat4 MM = modelView * projection ;
 
   DepthShader depthShader(this);
 
-  vec4 vertices[4];
+  vec4 vertices[MAX_VERTICIES];
+	vec2 textures[MAX_VERTICIES];
 
-	vec2 textures[4];
-
-  bool clip = false;
+  bool clip = true;
 
 	int count;
   int renderCount = model->triangleCount();
