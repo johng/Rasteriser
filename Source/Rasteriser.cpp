@@ -209,7 +209,7 @@ void Rasteriser::DrawTriangle(RenderData *data, Shader &shader, float *z_buffer,
       vec3 colour;
       shader.colour(bar, colour, triangle, data);
       z_buffer[x + y * width] = z;
-      if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
+			if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
 
     }
   }
@@ -313,7 +313,7 @@ void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices
 			float ifactor;
 			ifactor = (float) ((W_CLIP - inVertices[previousVertex].w) /
 												 (inVertices[previousVertex].w - inVertices[currentVertex].w));
-			vec4 ip = inVertices[previousVertex] + ifactor * (inVertices[currentVertex] - inVertices[previousVertex]);
+			vec4 ip = inVertices[previousVertex] - ifactor * (inVertices[currentVertex] - inVertices[previousVertex]);
       outVertices[outCount] = ip;
 
       if(retTextures != NULL) {
