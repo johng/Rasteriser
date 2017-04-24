@@ -65,7 +65,8 @@ int main(int argc, char* argv[] )
 
 	}
 
-	Camera camera(vec3(0.5,1,3));
+	//Camera camera(vec3(0.238403,1.2,1.17608));
+	Camera camera(vec3(0.0898502,1.1,0.895504));
 
 	//float x = sin(xx_camera) * r_camera ;
 	//float z = cos(xx_camera) * r_camera ;
@@ -157,10 +158,6 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 		// Move camera to the right
 		xx_camera += delta_move;
 	}
-
-
-
-
 
 	if( keystate[SDLK_UP] )
 	{

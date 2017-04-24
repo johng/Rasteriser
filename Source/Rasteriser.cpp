@@ -165,6 +165,8 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
   return vec3(-1,-1,-1);
 }
 
+int iaa = 0;
+
 void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen) {
 
 
@@ -210,7 +212,10 @@ void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shade
       vec3 colour;
       shader.colour(bar, colour, triangle);
       z_buffer[x + y * width] = z;
-      if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
+
+
+
+			if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
 
     }
   }
@@ -227,7 +232,6 @@ void Rasteriser::DrawPolygon(vec4 *verticies, vec2 *inTextures, int polyEdgeCoun
 	}
 
   int triangleCount = polyEdgeCount - 2;
-
 	for(int i = 0 ; i < triangleCount ; i ++) {
 //todo make this non global
     drawVerticies[0] = verticies[0];
@@ -313,7 +317,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 			float ifactor;
 			ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
 												 (inVerticies[previousVertex].w - inVerticies[currentVertex].w));
-			vec4 ip = inVerticies[previousVertex] + ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
+			vec4 ip = inVerticies[previousVertex] - ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
       outVertices[outCount] = ip;
 
       if(retTextures != NULL) {
