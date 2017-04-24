@@ -3,6 +3,7 @@
 #include "Camera.h"
 #include "Lighting.h"
 #include "Rasteriser.h"
+//#include "Renderer.h"
 #define MAX_VERTICIES 10
 
 //Coordinates of the current polygon to draw
@@ -226,11 +227,8 @@ void Rasteriser::DrawPolygon(vec4 *vertices, vec2 *inTextures, int polyEdgeCount
 
   int triangleCount = polyEdgeCount - 2;
   RenderData data;
-  //vec4 drawVertices[3];
-  //vec2 textureCoordinates[3];
 
 	for(int i = 0; i < triangleCount; i ++) {
-//todo make this non global
 //Breaks the polygon up into triangles
     data.drawVertices[0] = vertices[0];
     data.drawVertices[1] = vertices[1+i];
@@ -435,7 +433,37 @@ void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices
 
 }
 
+void Rasteriser::ProcessTriangles(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices, vec2 *textures, vec4 *outVertices, vec2 *outTextures, bool draw_screen)
+{
+  int renderCount = model->triangleCount();
+  int count;
+  bool clip = true;
+  for(int i = 0; i < renderCount; i++) {
 
+    Polygon * triangle = model->GetTriangle(i);
+
+    for(int j = 0; j < triangle->verticesCount ;j++) {
+
+			vec4 v = vec4(model->vertex(i,j),1);
+      vertices[j] = v * modelView * projection;
+
+      if(outTextures != NULL) {
+        if(model->loadedNormalTexture) {
+          vec2 t = model->textureCoordinate(i, j);
+          textures[j] = t;
+        }else{
+          outTextures = NULL;
+        }
+      }
+    }
+		if(clip) {
+      Clip(vertices, textures, triangle->verticesCount, outVertices, outTextures, &count);
+      DrawPolygon(outVertices, outTextures, count, shader, z_buffer, triangle, draw_screen);
+    }else{
+      DrawPolygon(vertices, outTextures, triangle->verticesCount, shader, z_buffer, triangle, draw_screen);
+    }
+  }
+}
 
 void Rasteriser::Draw()
 {
@@ -486,28 +514,11 @@ void Rasteriser::Draw()
   bool clip = true;
 
 	int count;
-  int renderCount = model->triangleCount();
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
 
   //For all triangles
-	for(int i = 0; i < renderCount; i++){
-
-    Polygon * triangle = model->GetTriangle(i);
-
-    for(int j = 0; j < triangle->verticesCount; j++){
-      vec4 v = vec4(model->vertex(i,j),1); //convert to homogeneous coords
-      vertices[j] = v * modelView * projection; //translate and insert into vertices array
-    }
-    if(clip) {
-      Clip(vertices, NULL, triangle->verticesCount, outVertices, NULL, &count);
-      DrawPolygon(outVertices, NULL, count, depthShader, depthBufferLight, triangle, false);
-
-    }else{
-      DrawPolygon(vertices, NULL, triangle->verticesCount, depthShader, depthBufferLight, triangle, false);
-    }
-
-	}
+  ProcessTriangles(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
 
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));
@@ -517,25 +528,7 @@ void Rasteriser::Draw()
   mat4 camera_light_transform = inverse(modelView * projection) * MM ;
 
   Shadow shadowShader(this, camera_light_transform);
-  for(int i = 0 ; i <renderCount; i++){
-    Polygon * triangle = model->GetTriangle(i);
-    for(int j = 0; j < triangle->verticesCount ;j++){
-			vec4 v = vec4(model->vertex(i,j),1);
-      vertices[j] = v * modelView * projection;
-      if(model->loadedNormalTexture) {
-        vec2 t = model->textureCoordinate(i, j);
-        textures[j] = t;
-      }else{
-        outTextures = NULL;
-      }
-    }
-		if(clip) {
-      Clip(vertices, textures, triangle->verticesCount, outVertices, outTextures, &count);
-      DrawPolygon(outVertices, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
-    }else{
-      DrawPolygon(vertices, outTextures, triangle->verticesCount, shadowShader, depthBufferCamera, triangle, true);
-    }
-  }
+  ProcessTriangles(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, true);
 
   if (SDL_MUSTLOCK(screen)) {
     SDL_UnlockSurface(screen);
