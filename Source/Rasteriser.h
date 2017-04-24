@@ -24,9 +24,9 @@ protected:
     vec3 light_pos;
     vec3 camera_pos;
     vec3 light_colour;
+    Model * model;
 		Camera &camera;
 		Lighting &lighting;
-    Model * model;
 
 
 private:

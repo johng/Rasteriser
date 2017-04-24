@@ -24,28 +24,29 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
   m[1] = drawVerticies[1];
   m[2] = drawVerticies[2];
 
+
+
   mat3x4 mm;
   for(int i =0;i<3;i++){
-    mm[i] = m[i] * screen_shadow;
-    mm[i] = mm[i]/mm[i].w * viewPort;
+    mm[i] = m[i]/m[i] * screen_shadow * viewPort;
+
   }
 
-  vec4 aad = mm * bar;
+  vec4 tri_bar = m * bar;
 
-  vec4 light =  aad ;
+  tri_bar = tri_bar * screen_shadow * viewPort;
+
+
+  vec4 light =  tri_bar / tri_bar.w ;
 
   float shadow = 1;
 
-  int xx = int(light[0]);
+  int xx = int(light[0]); //Indexes into light buffer
   int yy = int(light[1]);
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 44);
-  }else{
-    if(yy < 0 || xx < 0) {
-      int a = 12;
-    }
+    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 20);
   }
 
   mat3x2 text;
@@ -64,7 +65,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     vec3 vv = vec3( normal*mm);
     vec3 n =  normalize( vv);
-    vec3 ll =  vec4(r->light_pos,1) * modelView ;
+    vec3 ll = (vec3)(vec4(r->light_pos,1) * modelView);
     vec3 l = normalize(ll);
     float ttt = glm::dot(n,l)*2.0f;
     vec3 tt = n*ttt - l;
@@ -84,28 +85,29 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
-      glm::vec3 e1 = m[1]-m[0];
-      glm::vec3 e2 = m[2]-m[1];
-      vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
+      //vec3 e1 = (vec3)(m[1]-m[0]);
+      //vec3 e2 = (vec3)(m[2]-m[1]);
+      //vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
 
       vec3 ambient(1,1,1);
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
-      vec3 kd = r->model->diffuseReflectance(triangle->material);
-      vec3 ks = r->model->specularReflectance(triangle->material);
+      //vec3 kd = r->model->diffuseReflectance(triangle->material);
+      //vec3 ks = r->model->specularReflectance(triangle->material);
 
-      vec3 aa = (m*bar);
+      //vec3 aa = (vec3)(m*bar);
 
-      float l = length( aa - r->light_pos) ;
+      //float l = length( aa - r->light_pos) ;
 
-      float norm = glm::dot(normal , r->light_pos);
+      //float norm = glm::dot(normal , r->light_pos);
 
       for(int i = 0 ; i < 3;i++){
         //colour[i] = std::min<float>(( shadow * ka[i] * ambient[i] + kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
         colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
-      int a = 2;
+      //todo implement the rest of the shadaing for the othger mateterial types;
+      //int a = 2;
 
       /* Ka * Ia + Kd * (N * L0) * Ij
        *
@@ -157,27 +159,28 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
 		//Divide this by the are of two vertices and the test point to get baycentric value
 		return vec3(1.f-(u.x+u.y)/u.z, u.y/u.z, u.x/u.z);
 	}
-  return vec3(-1,1,1);
+  //Else return negative values, so our check fails
+  return vec3(-1,-1,-1);
 }
 
 void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen) {
 
 
-  ivec2 bboxmin(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-  ivec2 bboxmax(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
+  ivec2 min(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+  ivec2 max(-std::numeric_limits<int>::max(), -std::numeric_limits<int>::max());
 
   vec4 vertices[3];
   for (int i = 0; i < 3; i++) {
 
     vertices[i] = inVerticies[i]/inVerticies[i].w * viewPort;
     for (int j = 0; j < 2; j++) {
-      bboxmin[j] = std::min(bboxmin[j], (int)vertices[i][j] );
-      bboxmax[j] = std::max(bboxmax[j], (int)vertices[i][j] );
+      min[j] = std::min(min[j], (int)vertices[i][j] );
+      max[j] = std::max(max[j], (int)vertices[i][j] );
     }
   }
 
-  for (int y = bboxmin.y; y <= bboxmax.y; y++) {
-    for (int x = bboxmin.x; x <= bboxmax.x; x++) {
+  for (int y = min.y; y <= max.y; y++) {
+    for (int x = min.x; x <= max.x; x++) {
 
       if(x < 0 || y < 0 || x >= width || y >= height){
         cout << x << "," << y << "\n";
@@ -268,15 +271,8 @@ inline float cross (vec2 a , vec2 b){
 	return a.x * b.y - a.y * b.x;
 }
 
-inline bool rhs(vec2 a, vec2 b, vec2 p){
-	vec2 t1, t2;
-	t1 = b -a;
-	t2 = p -b;
-	float x = cross(t1,t2);
-	return x <= 0;
-}
 
-#define W_CLIP 0.0000001
+#define W_CLIP 0.00001
 
 //todo find an efficient way of rendering without textures
 void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVerticies, vec2 * retTextures , int * retCount) {
@@ -445,11 +441,7 @@ void Rasteriser::Draw()
 
 
   vec3 center(0,0,0);
-
- float angle = camera.angle ;
   vec3 up(0,1,0);
-
-
 
 
   light_pos = lighting.position();
@@ -458,35 +450,28 @@ void Rasteriser::Draw()
   center = camera_pos - center;
 
   center.y = 0;
-  float c = 1.0f;
+
+  //Adjust the center, so we're look at the origin of the model
+  //float c = 1.0f;
   float l = (float)length(center);
   center.x  -=  center.x / l;
   center.z  -=  center.z / l;
-  //center.y = 0;
-  cout << camera ;
   center.y = camera_pos.y;
-  cout << "center :" ;
-  cout << center.x << ","<< center.y << ","<< center.z << ":";
 
-  cout << length(camera_pos-center);
-  cout  << endl;
-
-  //center = vec3(4.95,0,4.95);
   light_colour = lighting.colour();
   ViewPort(0, 0, width, height);
 
   LookAt(light_pos, center, up);
-  //Projection(0);
 
-
+  //Store the transformation for use in the shader
   mat4 MM = modelView * projection ;
 
   DepthShader depthShader(this);
 
-  vec4 vertices[4];
+  vec4 vertices[MAX_VERTICIES];
+	vec2 textures[MAX_VERTICIES];
 
-	vec2 textures[4];
-
+  bool clip = true;
 
 	int count;
   int renderCount = model->triangleCount();
@@ -501,14 +486,21 @@ void Rasteriser::Draw()
       vec4 v = vec4(model->vertex(i,j),1);
       vertices[j] = v * modelView * projection;
     }
-		Clip(vertices,NULL,triangle->verticesCount,outVerticies,NULL, &count);
-    DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, triangle, false);
+    if(clip) {
+      Clip(vertices, NULL, triangle->verticesCount, outVerticies, NULL, &count);
+      DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, triangle, false);
+
+    }else{
+      DrawPolygon(vertices, NULL, triangle->verticesCount, depthShader, depthBufferLight, triangle, false);
+    }
 
 	}
 
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));
 
+
+  //Transform from camera space to light space
   mat4 camera_light_transform = inverse(modelView * projection) * MM ;
 
   Shadow shadowShader(this, camera_light_transform);
@@ -524,9 +516,12 @@ void Rasteriser::Draw()
         outTextures = NULL;
       }
     }
-		Clip(vertices,textures,triangle->verticesCount,outVerticies,outTextures, &count );
-    DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
-    //DrawPolygon(vertices, outTextures, triangle->verticesCount, shadowShader, depthBufferCamera, triangle, true);
+		if(clip) {
+      Clip(vertices, textures, triangle->verticesCount, outVerticies, outTextures, &count);
+      DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
+    }else{
+      DrawPolygon(vertices, outTextures, triangle->verticesCount, shadowShader, depthBufferCamera, triangle, true);
+    }
   }
 
   if (SDL_MUSTLOCK(screen)) {
