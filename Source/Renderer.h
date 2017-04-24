@@ -12,10 +12,14 @@ using glm::mat4;
 class Renderer {
 
 public:
+    struct RenderData {
+      vec4 drawVertices[3];
+      glm::vec2 textureCoordinates[3];
+    };
 
 		struct Shader {
 				virtual ~Shader();
-				virtual bool colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle) =0;
+				virtual bool colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) =0;
 		};
 
 		Renderer(SDL_Surface* screen);
