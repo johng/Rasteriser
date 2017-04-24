@@ -5,24 +5,22 @@
 #include "Rasteriser.h"
 #define MAX_VERTICIES 10
 
-vec2 textureCoordinates[3];
-vec4 drawVerticies[3];
+//Coordinates of the current polygon to draw
 
-
-bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle) {
+bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) {
   colour = vec3(255, 255, 255);
   return true;
 }
 
 
-bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle) {
+bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) {
 
   //vec4 p = vec4(1,1,1,1) ;
 
   mat3x4 m;
-  m[0] = drawVerticies[0];
-  m[1] = drawVerticies[1];
-  m[2] = drawVerticies[2];
+  m[0] = data->drawVertices[0];
+  m[1] = data->drawVertices[1];
+  m[2] = data->drawVertices[2];
 
 
 
@@ -50,9 +48,9 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
   }
 
   mat3x2 text;
-  text[0]  = textureCoordinates[0];
-  text[1]  = textureCoordinates[1];
-  text[2]  = textureCoordinates[2];
+  text[0]  = data->textureCoordinates[0];
+  text[1]  = data->textureCoordinates[1];
+  text[2]  = data->textureCoordinates[2];
 
   vec2 textureCoordInterp =  text * bar;
 
@@ -165,9 +163,7 @@ vec3 Rasteriser::barycentric(vec2 A, vec2 B, vec2 C, vec2 P) {
   return vec3(-1,-1,-1);
 }
 
-int iaa = 0;
-
-void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen) {
+void Rasteriser::DrawTriangle(RenderData *data, Shader &shader, float *z_buffer, Polygon *triangle, bool draw_screen) {
 
 
   ivec2 min(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
@@ -176,7 +172,7 @@ void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shade
   vec4 vertices[3];
   for (int i = 0; i < 3; i++) {
 
-    vertices[i] = inVerticies[i]/inVerticies[i].w * viewPort;
+    vertices[i] = data->drawVertices[i]/data->drawVertices[i].w * viewPort;
     for (int j = 0; j < 2; j++) {
       min[j] = std::min(min[j], (int)vertices[i][j] );
       max[j] = std::max(max[j], (int)vertices[i][j] );
@@ -210,11 +206,8 @@ void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shade
 
       if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
       vec3 colour;
-      shader.colour(bar, colour, triangle);
+      shader.colour(bar, colour, triangle, data);
       z_buffer[x + y * width] = z;
-
-
-
 			if (draw_screen)PutPixelSDL(screen, x, height - (y + 1), colour);
 
     }
@@ -224,7 +217,7 @@ void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shade
 
 
 
-void Rasteriser::DrawPolygon(vec4 *verticies, vec2 *inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, Polygon *triangle,
+void Rasteriser::DrawPolygon(vec4 *vertices, vec2 *inTextures, int polyEdgeCount, Shader &shader, float *z_buffer, Polygon *triangle,
                         bool draw_screen) {
 
 	if(polyEdgeCount == 0){
@@ -232,19 +225,24 @@ void Rasteriser::DrawPolygon(vec4 *verticies, vec2 *inTextures, int polyEdgeCoun
 	}
 
   int triangleCount = polyEdgeCount - 2;
-	for(int i = 0 ; i < triangleCount ; i ++) {
+  RenderData data;
+  //vec4 drawVertices[3];
+  //vec2 textureCoordinates[3];
+
+	for(int i = 0; i < triangleCount; i ++) {
 //todo make this non global
-    drawVerticies[0] = verticies[0];
-    drawVerticies[1] = verticies[1+i];
-    drawVerticies[2] = verticies[2+i];
+//Breaks the polygon up into triangles
+    data.drawVertices[0] = vertices[0];
+    data.drawVertices[1] = vertices[1+i];
+    data.drawVertices[2] = vertices[2+i];
 
     if(inTextures != NULL) {
-      textureCoordinates[0] = inTextures[0];
-      textureCoordinates[1] = inTextures[1 + i];
-      textureCoordinates[2] = inTextures[2 + i];
+      data.textureCoordinates[0] = inTextures[0];
+      data.textureCoordinates[1] = inTextures[1 + i];
+      data.textureCoordinates[2] = inTextures[2 + i];
     }
 
-    DrawTriangle(drawVerticies, textureCoordinates, shader, z_buffer, triangle, draw_screen);
+    DrawTriangle(&data, shader, z_buffer, triangle, draw_screen);
 	}
 }
 
@@ -289,7 +287,7 @@ inline float cross (vec2 a , vec2 b){
 #define W_CLIP 0.00001
 
 //todo find an efficient way of rendering without textures
-void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVerticies, vec2 * retTextures , int * retCount) {
+void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices, vec2 * retTextures , int * retCount) {
 
 	vec4 outVerticesArray[MAX_VERTICIES];
 	vec2 outTexturesArray[MAX_VERTICIES];
@@ -307,17 +305,17 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 	int outCount = 0;
 
 	int previousVertex = inCount - 1;
-	previousIn = inVerticies[previousVertex].w < W_CLIP ? 0 : 1;
+	previousIn = inVertices[previousVertex].w < W_CLIP ? 0 : 1;
 	for(int currentVertex = 0; currentVertex < inCount ; currentVertex++){
 
-		currentIn = inVerticies[currentVertex].w < W_CLIP ? 0 : 1;
+		currentIn = inVertices[currentVertex].w < W_CLIP ? 0 : 1;
 
 		if ( currentIn != previousIn  ) {
 
 			float ifactor;
-			ifactor = (float) ((W_CLIP - inVerticies[previousVertex].w) /
-												 (inVerticies[previousVertex].w - inVerticies[currentVertex].w));
-			vec4 ip = inVerticies[previousVertex] - ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
+			ifactor = (float) ((W_CLIP - inVertices[previousVertex].w) /
+												 (inVertices[previousVertex].w - inVertices[currentVertex].w));
+			vec4 ip = inVertices[previousVertex] - ifactor * (inVertices[currentVertex] - inVertices[previousVertex]);
       outVertices[outCount] = ip;
 
       if(retTextures != NULL) {
@@ -333,7 +331,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 
 		//If the current doesn't need to be clipped, add it to the list
 		if (currentIn){
-			outVertices[outCount] = inVerticies[currentVertex];
+			outVertices[outCount] = inVertices[currentVertex];
 			if(retTextures != NULL) outTextures[outCount] = inTextures[currentVertex];
       outCount++;
 		}
@@ -343,7 +341,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 
 	//Clip other axis
 
-	inVerticies = outVertices;
+	inVertices = outVertices;
 	inTextures = outTextures;
 
 	inCount = outCount;
@@ -371,24 +369,24 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 
 			int previousVertex = inCount - 1;
 
-			previousIn = j * inVerticies[previousVertex][axis] > inVerticies[previousVertex].w ? 0 : 1;
+			previousIn = j * inVertices[previousVertex][axis] > inVertices[previousVertex].w ? 0 : 1;
 
 			for (int currentVertex = 0; currentVertex < inCount; currentVertex++) {
 
-				currentIn = j * inVerticies[currentVertex][axis] > inVerticies[currentVertex].w ? 0 : 1;
+				currentIn = j * inVertices[currentVertex][axis] > inVertices[currentVertex].w ? 0 : 1;
 
 				if (previousIn != currentIn) {
 
 
-					float ifactor = (inVerticies[previousVertex].w - j * inVerticies[previousVertex][axis]) /
+					float ifactor = (inVertices[previousVertex].w - j * inVertices[previousVertex][axis]) /
 													(
-																	(inVerticies[previousVertex].w - j * inVerticies[previousVertex][axis]) -
-																	(inVerticies[currentVertex].w - j * inVerticies[currentVertex][axis])
+																	(inVertices[previousVertex].w - j * inVertices[previousVertex][axis]) -
+																	(inVertices[currentVertex].w - j * inVertices[currentVertex][axis])
 													);
 
 
-					vec4 ip = inVerticies[previousVertex] +
-										ifactor * (inVerticies[currentVertex] - inVerticies[previousVertex]);
+					vec4 ip = inVertices[previousVertex] +
+										ifactor * (inVertices[currentVertex] - inVertices[previousVertex]);
 
           if(retTextures != NULL) {
 
@@ -403,7 +401,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 
 				//If the currents doesn't need to be clipped, add it to the list
 				if (currentIn) {
-					outVertices[outCount] = inVerticies[currentVertex];
+					outVertices[outCount] = inVertices[currentVertex];
 
           if(retTextures != NULL)outTextures[outCount]=inTextures[currentVertex];
 
@@ -414,8 +412,8 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 			}
 
 			tempVertices = outVertices;
-			outVertices = inVerticies;
-			inVerticies = tempVertices;
+			outVertices = inVertices;
+			inVertices = tempVertices;
 
       if(retTextures != NULL) {
 
@@ -431,7 +429,7 @@ void Clip(vec4 *inVerticies, vec2 * inTextures , int inCount , vec4 * retVertici
 
 		}
 	}
-	memcpy(retVerticies,inVerticies,inCount*sizeof(vec4));
+	memcpy(retVertices,inVertices,inCount*sizeof(vec4));
 	if(retTextures!=NULL)memcpy(retTextures, inTextures,inCount*sizeof(vec2));
 	*retCount = inCount;
 
@@ -489,20 +487,21 @@ void Rasteriser::Draw()
 
 	int count;
   int renderCount = model->triangleCount();
-	vec4 * outVerticies = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
+	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
 
-	for(int i = 0 ; i < renderCount; i++){
+  //For all triangles
+	for(int i = 0; i < renderCount; i++){
 
     Polygon * triangle = model->GetTriangle(i);
 
-    for(int j = 0; j < triangle->verticesCount ;j++){
-      vec4 v = vec4(model->vertex(i,j),1);
-      vertices[j] = v * modelView * projection;
+    for(int j = 0; j < triangle->verticesCount; j++){
+      vec4 v = vec4(model->vertex(i,j),1); //convert to homogeneous coords
+      vertices[j] = v * modelView * projection; //translate and insert into vertices array
     }
     if(clip) {
-      Clip(vertices, NULL, triangle->verticesCount, outVerticies, NULL, &count);
-      DrawPolygon(outVerticies, NULL, count, depthShader, depthBufferLight, triangle, false);
+      Clip(vertices, NULL, triangle->verticesCount, outVertices, NULL, &count);
+      DrawPolygon(outVertices, NULL, count, depthShader, depthBufferLight, triangle, false);
 
     }else{
       DrawPolygon(vertices, NULL, triangle->verticesCount, depthShader, depthBufferLight, triangle, false);
@@ -531,8 +530,8 @@ void Rasteriser::Draw()
       }
     }
 		if(clip) {
-      Clip(vertices, textures, triangle->verticesCount, outVerticies, outTextures, &count);
-      DrawPolygon(outVerticies, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
+      Clip(vertices, textures, triangle->verticesCount, outVertices, outTextures, &count);
+      DrawPolygon(outVertices, outTextures, count, shadowShader, depthBufferCamera, triangle, true);
     }else{
       DrawPolygon(vertices, outTextures, triangle->verticesCount, shadowShader, depthBufferCamera, triangle, true);
     }
