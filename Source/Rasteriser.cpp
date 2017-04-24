@@ -139,8 +139,10 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 Rasteriser::Rasteriser(SDL_Surface *screen,Model * model,Camera &camera,Lighting &lighting) : Renderer(screen), model(model), camera(camera ), lighting(lighting) {
   this->depth = 10000;
 	this->screen = screen;
-	this->width = screen->w;
-	this->height = screen->h;
+	this->width = screen->w;//todo remove this
+	this->height = screen->h;//todo remove this
+	this->dimensions[0] = this->width;
+	this->dimensions[1] = this->height;
 	this->depthBufferCamera = (float*)malloc(sizeof(float)*height*width);
 	this->depthBufferLight = (float*)malloc(sizeof(float)*height*width);
 }
@@ -179,13 +181,21 @@ void Rasteriser::DrawTriangle(vec4 *inVerticies, vec2 *inTextures, Shader &shade
     }
   }
 
+
+#if DEBUG
+		if(min[0] < 0 || max[0] > width || min[1] < 0 || max[1] > height ){
+			cout << "Range error " << min[0] "," min[1] << "|" << max[0] "," max[1] << endl;
+		}
+#endif
+
+
+	for(int j = 0 ; j < 2 ; j ++) {
+		min[j] = std::max(min[j], 0);
+		max[j] = std::min(max[j], dimensions[j]-1); //do for width and height
+	}
+
   for (int y = min.y; y <= max.y; y++) {
     for (int x = min.x; x <= max.x; x++) {
-
-      if(x < 0 || y < 0 || x >= width || y >= height){
-        cout << x << "," << y << "\n";
-        continue;
-      }
 
       vec3 bar = barycentric(vec2(vertices[0].x , vertices[0].y ),
                              vec2(vertices[1].x , vertices[1].y),

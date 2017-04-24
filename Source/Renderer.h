@@ -29,6 +29,7 @@ protected:
 		static float depth;
 		int width;
 		int height;
+		int dimensions[2];
 };
 
 
