@@ -33,10 +33,10 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   vec4 tri_bar = m * bar;
 
-  tri_bar = tri_bar * screen_shadow * viewPort;
+  tri_bar = tri_bar * screen_shadow ;
+	tri_bar = tri_bar / tri_bar.w * viewPort;
 
-
-  vec4 light =  tri_bar / tri_bar.w ;
+  vec4 light =  tri_bar ;
 
   float shadow = 1;
 
@@ -84,25 +84,29 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
-      //vec3 e1 = (vec3)(m[1]-m[0]);
-      //vec3 e2 = (vec3)(m[2]-m[1]);
-      //vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
+      vec3 e1 = (vec3)(m[1]-m[0]);
+      vec3 e2 = (vec3)(m[2]-m[1]);
+      vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
 
-      vec3 ambient(1,1,1);
+      vec3 ambient(0.2,0.2,0.2);
+
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
-      //vec3 kd = r->model->diffuseReflectance(triangle->material);
-      //vec3 ks = r->model->specularReflectance(triangle->material);
+      vec3 kd = r->model->diffuseReflectance(triangle->material);
+      vec3 ks = r->model->specularReflectance(triangle->material);
 
-      //vec3 aa = (vec3)(m*bar);
+      vec3 aa = (vec3)(m*bar);
 
-      //float l = length( aa - r->light_pos) ;
+      float l = length( aa - r->light_pos) ;
 
-      //float norm = glm::dot(normal , r->light_pos);
+      float norm = glm::dot(normal , r->light_pos);
 
       for(int i = 0 ; i < 3;i++){
-        //colour[i] = std::min<float>(( shadow * ka[i] * ambient[i] + kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
-        colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
+
+				ka[i] * ambient[i] + kd[i] * cd
+
+        colour[i] = std::min<float>((  * ka[i]  + kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
+        //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
       //todo implement the rest of the shadaing for the othger mateterial types;
