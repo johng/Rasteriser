@@ -516,7 +516,7 @@ void Rasteriser::Draw()
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
-
+	Projection(0);
   //For all triangles
   ProcessTriangles(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
 
