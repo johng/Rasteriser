@@ -9,7 +9,16 @@
 //Coordinates of the current polygon to draw
 
 bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) {
-  colour = vec3(255, 255, 255);
+  mat3x4 m;
+  m[0] = data->drawVertices[0];
+  m[1] = data->drawVertices[1];
+  m[2] = data->drawVertices[2];
+
+  vec4 d = m * bar;
+  d = d/d.w;
+  d = d*viewPort;
+  colour = vec3(255,255,255) * d.z/this->r->depth;
+
   return true;
 }
 
@@ -111,8 +120,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       /* Ka * Ia + Kd * (N * L0) * Ij
        *
        * 1 This is a diffuse illumination model using Lambertian shading. The color includes an ambient and diffuse shading terms for each light source. The formula is
-      color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
-
+          color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
 
       2 This is a diffuse and specular illumination model using Lambertian shading and Blinn's interpretation of Phong's specular illumination model (BLIN77).
       The color includes an ambient constant term, and a diffuse and specular shading term for each light source. The formula is:
@@ -229,7 +237,7 @@ void Rasteriser::DrawPolygon(vec4 *vertices, vec2 *inTextures, int polyEdgeCount
   RenderData data;
 
 	for(int i = 0; i < triangleCount; i ++) {
-//Breaks the polygon up into triangles
+    //Breaks the polygon up into triangles
     data.drawVertices[0] = vertices[0];
     data.drawVertices[1] = vertices[1+i];
     data.drawVertices[2] = vertices[2+i];
@@ -517,8 +525,8 @@ void Rasteriser::Draw()
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
-	Projection(0);
 
+  Projection(-1.f/ length(light_pos-center));
   mat4 MM = modelView * projection ;
 
   //For all triangles
