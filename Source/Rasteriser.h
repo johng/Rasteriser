@@ -56,7 +56,8 @@ private:
   };
 
 
-  void ProcessTriangles(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices, vec2 *textures, vec4 *outVertices, vec2 *outTextures, bool draw_screen);
+  void ProcessPolygons(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices, vec2 *textures,
+                       vec4 *outVertices, vec2 *outTextures, bool draw_screen);
 
 };
 

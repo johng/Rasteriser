@@ -187,10 +187,11 @@ void Rasteriser::DrawTriangle(RenderData *data, Shader &shader, float *z_buffer,
 		}
 #endif
 
-
+  //After clipping we should be safe to set a hard limit on the bounds.
+  //Compile with debug mode for a warning, for out of bound items
 	for(int j = 0 ; j < 2 ; j ++) {
 		min[j] = std::max(min[j], 0);
-		max[j] = std::min(max[j], dimensions[j]-1); //do for width and height
+		max[j] = std::min(max[j], dimensions[j]-1);
 	}
 
   for (int y = min.y; y <= max.y; y++) {
@@ -201,9 +202,8 @@ void Rasteriser::DrawTriangle(RenderData *data, Shader &shader, float *z_buffer,
                              vec2(vertices[2].x , vertices[2].y ),
                              vec2(x, y));
 
-      float z =  bar.x * vertices[0].z +  bar.y * vertices[1].z  +  bar.z * vertices[2].z;
-      //float z =  bar.x/vertices[0].z +  bar.y/vertices[1].z  +  bar.z/ vertices[2].z;
-      //z = 1/z;
+      float z =  bar.x/vertices[0].z +  bar.y/vertices[1].z  +  bar.z/ vertices[2].z;
+      z = 1/z;
 
       if (bar.x < 0 || bar.y < 0 || bar.z < 0 || z_buffer[x + y * width] > z) continue;
       vec3 colour;
@@ -433,7 +433,8 @@ void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices
 
 }
 
-void Rasteriser::ProcessTriangles(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices, vec2 *textures, vec4 *outVertices, vec2 *outTextures, bool draw_screen)
+void Rasteriser::ProcessPolygons(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices,
+                                 vec2 *textures, vec4 *outVertices, vec2 *outTextures, bool draw_screen)
 {
   int renderCount = model->triangleCount();
   int count;
@@ -499,12 +500,12 @@ void Rasteriser::Draw()
   center.y = camera_pos.y;
 
   light_colour = lighting.colour();
-  ViewPort(0, 0, width, height);
+  ViewPort(0, 0, width-1, height-1);
 
   LookAt(light_pos, center, up);
 
   //Store the transformation for use in the shader
-  mat4 MM = modelView * projection ;
+
 
   DepthShader depthShader(this);
 
@@ -517,18 +518,21 @@ void Rasteriser::Draw()
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
 	Projection(0);
+
+  mat4 MM = modelView * projection ;
+
   //For all triangles
-  ProcessTriangles(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
+  ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
 
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));
 
 
   //Transform from camera space to light space
-  mat4 camera_light_transform = inverse(modelView * projection) * MM ;
+  mat4 camera_light_transform =  inverse(modelView * projection ) * MM;
 
   Shadow shadowShader(this, camera_light_transform);
-  ProcessTriangles(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, true);
+  ProcessPolygons(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, true);
 
   if (SDL_MUSTLOCK(screen)) {
     SDL_UnlockSurface(screen);
