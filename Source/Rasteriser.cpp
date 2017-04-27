@@ -527,7 +527,7 @@ void Rasteriser::Draw()
 	}
 
 	ViewPort(0, 0, width-1, height-1);
-  vec3 centerO(0,1,0);
+  vec3 centerO(0,0,0);
   vec3 up(0,1,0);
 	vec3 center;
 
@@ -538,18 +538,17 @@ void Rasteriser::Draw()
 
   center = light_pos - centerO;
 
-  center.y = 0;
 
   //Adjust the center, so we're look at the origin of the model
   //float c = 1.0f;
   l = (float)length(center);
-  center.x  -=  center.x / l;
-  center.z  -=  center.z / l;
-  center.y = light_pos.y;
+  center.x  -=  0.5 * center.x / l;
+  center.z  -=  0.5 *center.z / l;
+  center.y  -=  0.5 *center.y / l;
 
 
 
-  LookAt(light_pos, vec3(0,1,0), up);
+  LookAt(vec3(0,1.5,2), vec3(0,1.5,1) , vec3(0,1,0));
 
   //Store the transformation for use in the shader
 
@@ -564,7 +563,7 @@ void Rasteriser::Draw()
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
-	Projection(0);
+	Projection(-1.f/ length(light_pos));
 
   mat4 MM = modelView * projection ;
 
