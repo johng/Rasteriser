@@ -81,33 +81,60 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
+
+
 			mat3x4 ma = data->worldSpaceVerticies;
 
       vec3 e1 = (vec3)(ma[2]-ma[1]);
       vec3 e2 = (vec3)(ma[1]-ma[0]);
       vec3 verticesNormal = glm::normalize( glm::cross( e2, e1 ) );
 
-			float aIntensity = 0.8;
+			float aIntensity = 0.3;
       vec3 ambient(aIntensity,aIntensity,aIntensity);
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
       vec3 kd = r->model->diffuseReflectance(triangle->material);
       vec3 ks = r->model->specularReflectance(triangle->material);
+      vec3 ke = r->model->glowReflectance(triangle->material);
 
 			vec3 world_point = ma*bar;
 
-			vec3 l = normalize(r->light_pos);
+			//Phong light implementation
 
+			vec3 L = normalize(r->light_pos - world_point);
+			vec3 N = verticesNormal;
+			vec3 V =  normalize(r->camera_pos - world_point);
+			vec3 C = N * (glm::dot(L, N));
+			vec3 R = 2.0f*C - L;
+
+			//Att(d) = 1/(distance to light)
 			float lengthLightDistance = length( world_point - r->light_pos) ;
+			float Att = 1.0f/(lengthLightDistance);
+
+			/*
+			 * RGB= Ke + // ‘emissive’ material; it glows!
+					Ia*Ka + // ambient light * ambient reflectance
+					Id*Kd*Att*max(0,(N·L)) // diffuse light * diffuse reflectance
+					Is*Ks*Att*(max(0,R·V))Se
+				, // specular light * specular reflectance
+			 * Ia ambient light
+			 * Ij light j's intensity
+			 */
+
+
+			vec3 l = normalize(r->light_pos);
 
       float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , l ));
 
 			//cout << normal << endl;
-			vec3 V = normalize(r->camera_pos);
-			vec3 H = normalize((V + l)/2.0f);
+			vec3 H = normalize((V + l));
+			float NdotH = glm::dot( N, H );
 
       for(int i = 0 ; i < 3;i++){
-        colour[i] = std::min<float>((   0.3 * shadow * ka[i] * ambient[i] + 0.8 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance)) ) * 255.0f, 255.0f) ;
+        colour[i] = 255.0f * std::min<float>(
+								ke[i] +
+								0.8 * shadow * ka[i] * ambient[i] +
+								0.4 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance))  , 1.0f) ;
         //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
@@ -118,6 +145,11 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
        *
        * 1 This is a diffuse illumination model using Lambertian shading. The color includes an ambient and diffuse shading terms for each light source. The formula is
       color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
+
+
+       P:
+       L: unit vector towards light source from P
+			 N: Normal Vector N
 
 
       2 This is a diffuse and specular illumination model using Lambertian shading and Blinn's interpretation of Phong's specular illumination model (BLIN77).

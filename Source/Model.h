@@ -35,6 +35,7 @@ public:
     glm::vec3 ambiantReflectance(int index);
     glm::vec3 specularReflectance(int index);
     glm::vec3 diffuseReflectance(int index);
+    glm::vec3 glowReflectance(int index);
 
     int triangleCount();
     glm::vec3 vertex(int triangle, int index);
