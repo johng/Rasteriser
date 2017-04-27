@@ -84,25 +84,40 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
-      //vec3 e1 = (vec3)(m[1]-m[0]);
-      //vec3 e2 = (vec3)(m[2]-m[1]);
-      //vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
+			mat3x4 ma;
+
+			for(int i = 0; i < 3; i++){
+				ma[i] = m[i] * inverse(modelView*projection);
+				ma[i] = ma[i]/ma[i].w;
+			}
+
+      vec3 e1 = (vec3)(ma[2]-ma[1]);
+      vec3 e2 = (vec3)(ma[1]-ma[0]);
+      vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
 
       vec3 ambient(1,1,1);
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
-      //vec3 kd = r->model->diffuseReflectance(triangle->material);
-      //vec3 ks = r->model->specularReflectance(triangle->material);
+      vec3 kd = r->model->diffuseReflectance(triangle->material);
+      vec3 ks = r->model->specularReflectance(triangle->material);
 
-      //vec3 aa = (vec3)(m*bar);
+			vec3 aa = ma*bar;
 
-      //float l = length( aa - r->light_pos) ;
 
-      //float norm = glm::dot(normal , r->light_pos);
+			vec4 light_pos =  vec4(r->light_pos,1);
+			//cout << light_pos.x << "," << light_pos.y << "," << light_pos.z << endl;
+
+			vec3 ll = light_pos;
+
+			float l = length( aa - ll) ;
+
+      float norm = std::max<float>(0,glm::dot(normal , normalize(ll) ));
+
+			//out << l << endl;
 
       for(int i = 0 ; i < 3;i++){
-        //colour[i] = std::min<float>(( shadow * ka[i] * ambient[i] + kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
-        colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
+        colour[i] = std::min<float>(( 0.3 * shadow * ka[i] * ambient[i] + 2  *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
+        //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
       //todo implement the rest of the shadaing for the othger mateterial types;
