@@ -96,15 +96,18 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
 			vec3 world_point = ma*bar;
 
+			vec3 l = normalize(r->light_pos);
 
-			float l = length( world_point - r->light_pos) ;
+			float lengthLightDistance = length( world_point - r->light_pos) ;
 
-      float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , normalize(r->light_pos) ));
+      float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , l ));
 
 			//cout << normal << endl;
+			vec3 V = normalize(r->camera_pos);
+			vec3 H = normalize((V + l)/2.0f);
 
       for(int i = 0 ; i < 3;i++){
-        colour[i] = std::min<float>(( 0.3 * shadow * ka[i] * ambient[i] + 0.8 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
+        colour[i] = std::min<float>((   0.3 * shadow * ka[i] * ambient[i] + 0.8 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance)) ) * 255.0f, 255.0f) ;
         //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
@@ -121,11 +124,18 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       The color includes an ambient constant term, and a diffuse and specular shading term for each light source. The formula is:
       color = KaIa + Kd { SUM j=1..ls, (N*Lj)Ij } + Ks { SUM j=1..ls, ((H*Hj)^Ns)Ij }
 
-      Term definitions are: Ia ambient light, Ij light j's intensity, Ka ambient reflectance, Kd diffuse reflectance, Ks specular reflectance, H unit vector bisector between L and V, L unit light vector, N unit surface normal, V unit view vector
+      Term definitions are: Ia ambient light, Ij light j's intensity,
+       Ka ambient reflectance, Kd diffuse reflectance,
+       Ks specular reflectance, H unit vector bisector between L and V,
+       L unit light vector, N unit surface normal, V unit view vector
       *
-      *
-      *
+
+
       */
+
+
+
+
 
     }else{
       colour = vec3(0,0,0);
