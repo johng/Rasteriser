@@ -130,6 +130,11 @@ glm::vec3 Model::specularReflectance(int index){
 }
 
 
+glm::vec3 Model::glowReflectance(int index){
+  return material.data[index].Ke;
+}
+
+
 
 bool Model::LoadDiffuseTexture(const char *filename) {
 

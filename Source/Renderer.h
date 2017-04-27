@@ -13,9 +13,10 @@ class Renderer {
 
 public:
     struct RenderData {
-      vec4 drawVertices[3];
+			glm::mat3x4 renderSpaceVertices;
+			glm::mat3x4 worldSpaceVerticies;
       glm::vec2 textureCoordinates[3];
-    };
+		};
 
 		struct Shader {
 				virtual ~Shader();

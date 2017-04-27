@@ -10,6 +10,7 @@ struct Entry {
     glm::vec3 Ka;
     glm::vec3 Kd;
     glm::vec3 Ks;
+    glm::vec3 Ke;
     float Ns;
 };
 

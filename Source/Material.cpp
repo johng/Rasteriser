@@ -60,6 +60,17 @@ bool Material::ReadMaterial(const char *filename) {
       data[count-1].Kd = diff;
     }
 
+    if (line.compare(0, 2, "Ke") == 0) //This is a vertex
+    {
+      ss.ignore(2);
+      glm::vec3 diff = glm::vec3();
+      for(int i=0; i<3; i++) {
+        ss >> diff[i];
+      }
+      cout << diff[0] << "," << diff[1] << "," << diff[2]<< endl;
+      data[count-1].Ke = diff;
+    }
+
     if (line.compare(0, 2, "Ks") == 0) //This is a vertex
     {
       ss.ignore(2);

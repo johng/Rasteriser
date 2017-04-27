@@ -9,16 +9,7 @@
 //Coordinates of the current polygon to draw
 
 bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) {
-  mat3x4 m;
-  m[0] = data->drawVertices[0];
-  m[1] = data->drawVertices[1];
-  m[2] = data->drawVertices[2];
-
-  vec4 d = m * bar;
-  d = d/d.w;
-  d = d*viewPort;
-  colour = vec3(255,255,255) * d.z/this->r->depth;
-
+  colour = vec3(255, 255, 255);
   return true;
 }
 
@@ -27,25 +18,14 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   //vec4 p = vec4(1,1,1,1) ;
 
-  mat3x4 m;
-  m[0] = data->drawVertices[0];
-  m[1] = data->drawVertices[1];
-  m[2] = data->drawVertices[2];
+  mat3x4 m = data->renderSpaceVertices;
+	mat3x4 ma = data->worldSpaceVerticies;
+	vec3 world_point = ma*bar;
 
+	vec4 aa = ma*bar * screen_shadow ;
+	aa = aa/aa.w * viewPort;
 
-
-  mat3x4 mm;
-  for(int i =0;i<3;i++){
-    mm[i] = m[i]/m[i] * screen_shadow * viewPort;
-
-  }
-
-  vec4 tri_bar = m * bar;
-
-  tri_bar = tri_bar * screen_shadow * viewPort;
-
-
-  vec4 light =  tri_bar / tri_bar.w ;
+  vec4 light =  aa ;
 
   float shadow = 1;
 
@@ -54,18 +34,21 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 20);
+    shadow = (r->depthBufferLight[idx] < (light[2] + 200));
   }
 
-  mat3x2 text;
-  text[0]  = data->textureCoordinates[0];
-  text[1]  = data->textureCoordinates[1];
-  text[2]  = data->textureCoordinates[2];
 
-  vec2 textureCoordInterp =  text * bar;
 
 
   if(r->model->loadedNormalTexture){
+
+
+		mat3x2 text;
+		text[0]  = data->textureCoordinates[0];
+		text[1]  = data->textureCoordinates[1];
+		text[2]  = data->textureCoordinates[2];
+
+		vec2 textureCoordInterp =  text * bar;
 
     vec4 normal = vec4(r->model->normalMapTexture(textureCoordInterp),1); // normal
 
@@ -93,25 +76,59 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
-      //vec3 e1 = (vec3)(m[1]-m[0]);
-      //vec3 e2 = (vec3)(m[2]-m[1]);
-      //vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
 
-      vec3 ambient(1,1,1);
+
+
+
+      vec3 e1 = (vec3)(ma[2]-ma[1]);
+      vec3 e2 = (vec3)(ma[1]-ma[0]);
+      vec3 verticesNormal = glm::normalize( glm::cross( e2, e1 ) );
+
+			float aIntensity = 0.3;
+      vec3 ambient(aIntensity,aIntensity,aIntensity);
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
-      //vec3 kd = r->model->diffuseReflectance(triangle->material);
-      //vec3 ks = r->model->specularReflectance(triangle->material);
+      vec3 kd = r->model->diffuseReflectance(triangle->material);
+      vec3 ks = r->model->specularReflectance(triangle->material);
+      vec3 ke = r->model->glowReflectance(triangle->material);
 
-      //vec3 aa = (vec3)(m*bar);
 
-      //float l = length( aa - r->light_pos) ;
 
-      //float norm = glm::dot(normal , r->light_pos);
+			//Phong light implementation
+
+			vec3 L = normalize(r->light_pos - world_point);
+			vec3 N = verticesNormal;
+			vec3 V =  normalize(r->camera_pos - world_point);
+			vec3 C = N * (glm::dot(L, N));
+			vec3 R = 2.0f*C - L;
+
+			//Att(d) = 1/(distance to light)
+			float lengthLightDistance = length( world_point - r->light_pos) * 2.0f ;
+			float Att = 1.0f/(lengthLightDistance);
+
+			/*
+			 * RGB= Ke + // ‘emissive’ material; it glows!
+					Ia*Ka + // ambient light * ambient reflectance
+					Id*Kd*Att*max(0,(N·L)) // diffuse light * diffuse reflectance
+					Is*Ks*Att*(max(0,R·V))Se
+				, // specular light * specular reflectance
+			 * Ia ambient light
+			 * Ij light j's intensity
+			 */
+
+
+			vec3 l = normalize(r->light_pos);
+
+      float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , l ));
+			//cout << lengthLightDistance << endl;
+			vec3 H = normalize((V + l));
+			float NdotH = glm::dot( N, H );
 
       for(int i = 0 ; i < 3;i++){
-        //colour[i] = std::min<float>(( shadow * ka[i] * ambient[i] + kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
-        colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
+        colour[i] = 255.0f * std::min<float>(
+								ke[i] +
+								0.6 * shadow * ka[i] * ambient[i] +
+								0.9 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance))  , 1.0f) ;
       }
 
       //todo implement the rest of the shadaing for the othger mateterial types;
@@ -120,17 +137,30 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       /* Ka * Ia + Kd * (N * L0) * Ij
        *
        * 1 This is a diffuse illumination model using Lambertian shading. The color includes an ambient and diffuse shading terms for each light source. The formula is
-          color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
+      color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
+
+
+       P:
+       L: unit vector towards light source from P
+			 N: Normal Vector N
+
 
       2 This is a diffuse and specular illumination model using Lambertian shading and Blinn's interpretation of Phong's specular illumination model (BLIN77).
       The color includes an ambient constant term, and a diffuse and specular shading term for each light source. The formula is:
       color = KaIa + Kd { SUM j=1..ls, (N*Lj)Ij } + Ks { SUM j=1..ls, ((H*Hj)^Ns)Ij }
 
-      Term definitions are: Ia ambient light, Ij light j's intensity, Ka ambient reflectance, Kd diffuse reflectance, Ks specular reflectance, H unit vector bisector between L and V, L unit light vector, N unit surface normal, V unit view vector
+      Term definitions are: Ia ambient light, Ij light j's intensity,
+       Ka ambient reflectance, Kd diffuse reflectance,
+       Ks specular reflectance, H unit vector bisector between L and V,
+       L unit light vector, N unit surface normal, V unit view vector
       *
-      *
-      *
+
+
       */
+
+
+
+
 
     }else{
       colour = vec3(0,0,0);
@@ -181,7 +211,7 @@ void Rasteriser::DrawTriangle(RenderData *data, Shader &shader, float *z_buffer,
   vec4 vertices[3];
   for (int i = 0; i < 3; i++) {
 
-    vertices[i] = data->drawVertices[i]/data->drawVertices[i].w * viewPort;
+    vertices[i] = data->renderSpaceVertices[i]/data->renderSpaceVertices[i].w * viewPort;
     for (int j = 0; j < 2; j++) {
       min[j] = std::min(min[j], (int)vertices[i][j] );
       max[j] = std::max(max[j], (int)vertices[i][j] );
@@ -237,10 +267,18 @@ void Rasteriser::DrawPolygon(vec4 *vertices, vec2 *inTextures, int polyEdgeCount
   RenderData data;
 
 	for(int i = 0; i < triangleCount; i ++) {
-    //Breaks the polygon up into triangles
-    data.drawVertices[0] = vertices[0];
-    data.drawVertices[1] = vertices[1+i];
-    data.drawVertices[2] = vertices[2+i];
+//Breaks the polygon up into triangles
+    data.renderSpaceVertices[0] = vertices[0];
+    data.renderSpaceVertices[1] = vertices[1+i];
+    data.renderSpaceVertices[2] = vertices[2+i];
+
+		data.worldSpaceVerticies[0] = vertices[0] * inverse(modelView*projection);
+		data.worldSpaceVerticies[1] = vertices[1+i] * inverse(modelView*projection);
+		data.worldSpaceVerticies[2] = vertices[2+i] * inverse(modelView*projection);
+
+		data.worldSpaceVerticies[0] = data.worldSpaceVerticies[0]/data.worldSpaceVerticies[0].w;
+		data.worldSpaceVerticies[1] = data.worldSpaceVerticies[1]/data.worldSpaceVerticies[1].w;
+		data.worldSpaceVerticies[2] = data.worldSpaceVerticies[2]/data.worldSpaceVerticies[2].w;
 
     if(inTextures != NULL) {
       data.textureCoordinates[0] = inTextures[0];
@@ -488,29 +526,29 @@ void Rasteriser::Draw()
 		depthBufferLight[i] = -INFINITY;
 	}
 
-
-  vec3 center(0,0,0);
+	ViewPort(0, 0, width-1, height-1);
+  vec3 centerO(0,0,0);
   vec3 up(0,1,0);
+	vec3 center;
 
+	float l;
 
   light_pos = lighting.position();
   camera_pos = camera.position();
 
-  center = camera_pos - center;
+  center = light_pos - centerO;
 
-  center.y = 0;
 
   //Adjust the center, so we're look at the origin of the model
   //float c = 1.0f;
-  float l = (float)length(center);
-  center.x  -=  center.x / l;
-  center.z  -=  center.z / l;
-  center.y = camera_pos.y;
+  l = (float)length(center);
+  center.x  -=  0.5 * center.x / l;
+  center.z  -=  0.5 *center.z / l;
+  center.y  -=  0.5 *center.y / l;
 
-  light_colour = lighting.colour();
-  ViewPort(0, 0, width-1, height-1);
 
-  LookAt(light_pos, center, up);
+
+  LookAt(vec3(0,1.5,2), vec3(0,1.5,1) , vec3(0,1,0));
 
   //Store the transformation for use in the shader
 
@@ -525,21 +563,34 @@ void Rasteriser::Draw()
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
+	Projection(-1.f/ length(light_pos));
 
-  Projection(-1.f/ length(light_pos-center));
   mat4 MM = modelView * projection ;
 
   //For all triangles
   ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
+
+
+	center = camera_pos - centerO;
+
+	center.y = 0;
+
+	//Adjust the center, so we're look at the origin of the model
+	//float c = 1.0f;
+	l = length(center);
+	center.x  -=  center.x / l;
+	center.z  -=  center.z / l;
+	center.y = camera_pos.y;
+
 
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));
 
 
   //Transform from camera space to light space
-  mat4 camera_light_transform =  inverse(modelView * projection ) * MM;
+  mat4 camera_transform =  MM;
 
-  Shadow shadowShader(this, camera_light_transform);
+  Shadow shadowShader(this, camera_transform);
   ProcessPolygons(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, true);
 
   if (SDL_MUSTLOCK(screen)) {
