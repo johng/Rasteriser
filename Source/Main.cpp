@@ -191,7 +191,7 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
   y = sin(yy_light) * 20;
 
   lighting.set(vec3(0,1,3));
-
+	//lighting.set(vec3(0,1.98,0));
 
 
   if( keystate[SDLK_ESCAPE] )

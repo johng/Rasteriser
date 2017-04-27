@@ -19,18 +19,13 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
   //vec4 p = vec4(1,1,1,1) ;
 
   mat3x4 m = data->renderSpaceVertices;
+	mat3x4 ma = data->worldSpaceVerticies;
+	vec3 world_point = ma*bar;
 
-  mat3x4 mm;
-  for(int i =0;i<3;i++){
-    mm[i] = m[i]/m[i] * screen_shadow * viewPort;
-  }
+	vec4 aa = ma*bar * screen_shadow ;
+	aa = aa/aa.w * viewPort;
 
-  vec4 tri_bar = m * bar;
-
-  tri_bar = tri_bar * screen_shadow * viewPort;
-
-
-  vec4 light =  tri_bar / tri_bar.w ;
+  vec4 light =  aa ;
 
   float shadow = 1;
 
@@ -39,7 +34,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 20);
+    shadow = (r->depthBufferLight[idx] < (light[2] + 200));
   }
 
 
@@ -83,7 +78,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
 
 
-			mat3x4 ma = data->worldSpaceVerticies;
+
 
       vec3 e1 = (vec3)(ma[2]-ma[1]);
       vec3 e2 = (vec3)(ma[1]-ma[0]);
@@ -97,7 +92,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       vec3 ks = r->model->specularReflectance(triangle->material);
       vec3 ke = r->model->glowReflectance(triangle->material);
 
-			vec3 world_point = ma*bar;
+
 
 			//Phong light implementation
 
@@ -108,7 +103,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 			vec3 R = 2.0f*C - L;
 
 			//Att(d) = 1/(distance to light)
-			float lengthLightDistance = length( world_point - r->light_pos) ;
+			float lengthLightDistance = length( world_point - r->light_pos) * 2.0f ;
 			float Att = 1.0f/(lengthLightDistance);
 
 			/*
@@ -125,17 +120,15 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 			vec3 l = normalize(r->light_pos);
 
       float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , l ));
-
-			//cout << normal << endl;
+			//cout << lengthLightDistance << endl;
 			vec3 H = normalize((V + l));
 			float NdotH = glm::dot( N, H );
 
       for(int i = 0 ; i < 3;i++){
         colour[i] = 255.0f * std::min<float>(
 								ke[i] +
-								0.8 * shadow * ka[i] * ambient[i] +
-								0.4 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance))  , 1.0f) ;
-        //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
+								0.6 * shadow * ka[i] * ambient[i] +
+								0.9 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance))  , 1.0f) ;
       }
 
       //todo implement the rest of the shadaing for the othger mateterial types;
@@ -533,29 +526,30 @@ void Rasteriser::Draw()
 		depthBufferLight[i] = -INFINITY;
 	}
 
-
-  vec3 center(0,0,0);
+	ViewPort(0, 0, width-1, height-1);
+  vec3 centerO(0,1,0);
   vec3 up(0,1,0);
+	vec3 center;
 
+	float l;
 
   light_pos = lighting.position();
   camera_pos = camera.position();
 
-  center = camera_pos - center;
+  center = light_pos - centerO;
 
   center.y = 0;
 
   //Adjust the center, so we're look at the origin of the model
   //float c = 1.0f;
-  float l = (float)length(center);
+  l = (float)length(center);
   center.x  -=  center.x / l;
   center.z  -=  center.z / l;
-  center.y = camera_pos.y;
+  center.y = light_pos.y;
 
-  light_colour = lighting.colour();
-  ViewPort(0, 0, width-1, height-1);
 
-  LookAt(light_pos, center, up);
+
+  LookAt(light_pos, vec3(0,1,0), up);
 
   //Store the transformation for use in the shader
 
@@ -576,6 +570,19 @@ void Rasteriser::Draw()
 
   //For all triangles
   ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
+
+
+	center = camera_pos - centerO;
+
+	center.y = 0;
+
+	//Adjust the center, so we're look at the origin of the model
+	//float c = 1.0f;
+	l = length(center);
+	center.x  -=  center.x / l;
+	center.z  -=  center.z / l;
+	center.y = camera_pos.y;
+
 
   LookAt(camera_pos, center, up);
   Projection(-1.f/ length(camera_pos-center));
