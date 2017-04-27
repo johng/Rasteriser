@@ -18,17 +18,11 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   //vec4 p = vec4(1,1,1,1) ;
 
-  mat3x4 m;
-  m[0] = data->drawVertices[0];
-  m[1] = data->drawVertices[1];
-  m[2] = data->drawVertices[2];
-
-
+  mat3x4 m = data->renderSpaceVertices;
 
   mat3x4 mm;
   for(int i =0;i<3;i++){
     mm[i] = m[i]/m[i] * screen_shadow * viewPort;
-
   }
 
   vec4 tri_bar = m * bar;
@@ -48,15 +42,18 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
     shadow = 0.3f + 0.7f * (r->depthBufferLight[idx] < light[2] + 20);
   }
 
-  mat3x2 text;
-  text[0]  = data->textureCoordinates[0];
-  text[1]  = data->textureCoordinates[1];
-  text[2]  = data->textureCoordinates[2];
 
-  vec2 textureCoordInterp =  text * bar;
 
 
   if(r->model->loadedNormalTexture){
+
+
+		mat3x2 text;
+		text[0]  = data->textureCoordinates[0];
+		text[1]  = data->textureCoordinates[1];
+		text[2]  = data->textureCoordinates[2];
+
+		vec2 textureCoordInterp =  text * bar;
 
     vec4 normal = vec4(r->model->normalMapTexture(textureCoordInterp),1); // normal
 
@@ -84,12 +81,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     if(triangle->material>=0){
 
-			mat3x4 ma;
-
-			for(int i = 0; i < 3; i++){
-				ma[i] = m[i] * inverse(modelView*projection);
-				ma[i] = ma[i]/ma[i].w;
-			}
+			mat3x4 ma = data->worldSpaceVerticies;
 
       vec3 e1 = (vec3)(ma[2]-ma[1]);
       vec3 e2 = (vec3)(ma[1]-ma[0]);
@@ -105,7 +97,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
 
 			vec4 light_pos =  vec4(r->light_pos,1);
-			//cout << light_pos.x << "," << light_pos.y << "," << light_pos.z << endl;
+			//cout << normal.x << "," << normal.y << "," << normal.z << endl;
 
 			vec3 ll = light_pos;
 
@@ -113,10 +105,10 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
       float norm = std::max<float>(0,glm::dot(normal , normalize(ll) ));
 
-			//out << l << endl;
+			//cout << normal << endl;
 
       for(int i = 0 ; i < 3;i++){
-        colour[i] = std::min<float>(( 0.3 * shadow * ka[i] * ambient[i] + 2  *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
+        colour[i] = std::min<float>(( 0.3 * shadow * ka[i] * ambient[i] + 0.8 * kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
         //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
@@ -188,7 +180,7 @@ void Rasteriser::DrawTriangle(RenderData *data, Shader &shader, float *z_buffer,
   vec4 vertices[3];
   for (int i = 0; i < 3; i++) {
 
-    vertices[i] = data->drawVertices[i]/data->drawVertices[i].w * viewPort;
+    vertices[i] = data->renderSpaceVertices[i]/data->renderSpaceVertices[i].w * viewPort;
     for (int j = 0; j < 2; j++) {
       min[j] = std::min(min[j], (int)vertices[i][j] );
       max[j] = std::max(max[j], (int)vertices[i][j] );
@@ -245,9 +237,17 @@ void Rasteriser::DrawPolygon(vec4 *vertices, vec2 *inTextures, int polyEdgeCount
 
 	for(int i = 0; i < triangleCount; i ++) {
 //Breaks the polygon up into triangles
-    data.drawVertices[0] = vertices[0];
-    data.drawVertices[1] = vertices[1+i];
-    data.drawVertices[2] = vertices[2+i];
+    data.renderSpaceVertices[0] = vertices[0];
+    data.renderSpaceVertices[1] = vertices[1+i];
+    data.renderSpaceVertices[2] = vertices[2+i];
+
+		data.worldSpaceVerticies[0] = vertices[0] * inverse(modelView*projection);
+		data.worldSpaceVerticies[1] = vertices[1+i] * inverse(modelView*projection);
+		data.worldSpaceVerticies[2] = vertices[2+i] * inverse(modelView*projection);
+
+		data.worldSpaceVerticies[0] = data.worldSpaceVerticies[0]/data.worldSpaceVerticies[0].w;
+		data.worldSpaceVerticies[1] = data.worldSpaceVerticies[1]/data.worldSpaceVerticies[1].w;
+		data.worldSpaceVerticies[2] = data.worldSpaceVerticies[2]/data.worldSpaceVerticies[2].w;
 
     if(inTextures != NULL) {
       data.textureCoordinates[0] = inTextures[0];
@@ -544,9 +544,9 @@ void Rasteriser::Draw()
 
 
   //Transform from camera space to light space
-  mat4 camera_light_transform =  inverse(modelView * projection ) * MM;
+  mat4 camera_transform =  MM;
 
-  Shadow shadowShader(this, camera_light_transform);
+  Shadow shadowShader(this, camera_transform);
   ProcessPolygons(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, true);
 
   if (SDL_MUSTLOCK(screen)) {
