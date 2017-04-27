@@ -85,30 +85,26 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
       vec3 e1 = (vec3)(ma[2]-ma[1]);
       vec3 e2 = (vec3)(ma[1]-ma[0]);
-      vec3 normal = glm::normalize( glm::cross( e2, e1 ) );
+      vec3 verticesNormal = glm::normalize( glm::cross( e2, e1 ) );
 
-      vec3 ambient(1,1,1);
+			float aIntensity = 0.8;
+      vec3 ambient(aIntensity,aIntensity,aIntensity);
 
       vec3 ka = r->model->ambiantReflectance(triangle->material);
       vec3 kd = r->model->diffuseReflectance(triangle->material);
       vec3 ks = r->model->specularReflectance(triangle->material);
 
-			vec3 aa = ma*bar;
+			vec3 world_point = ma*bar;
 
 
-			vec4 light_pos =  vec4(r->light_pos,1);
-			//cout << normal.x << "," << normal.y << "," << normal.z << endl;
+			float l = length( world_point - r->light_pos) ;
 
-			vec3 ll = light_pos;
-
-			float l = length( aa - ll) ;
-
-      float norm = std::max<float>(0,glm::dot(normal , normalize(ll) ));
+      float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , normalize(r->light_pos) ));
 
 			//cout << normal << endl;
 
       for(int i = 0 ; i < 3;i++){
-        colour[i] = std::min<float>(( 0.3 * shadow * ka[i] * ambient[i] + 0.8 * kd[i] *  norm * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
+        colour[i] = std::min<float>(( 0.3 * shadow * ka[i] * ambient[i] + 0.8 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * l * l)) ) * 255.0f, 255.0f) ;
         //colour[i] = std::min<float>( shadow * ka[i] * 255.0f, 255.0f) ;
       }
 
