@@ -9,7 +9,12 @@
 //Coordinates of the current polygon to draw
 
 bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) {
-  colour = vec3(255, 255, 255);
+
+  vec4 point = data->renderSpaceVertices * bar;
+  vec3 p = point / point.w * viewPort;
+
+
+  colour = vec3(255, 255, 255) * p / this->r->depth;
   return true;
 }
 
@@ -34,7 +39,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = (r->depthBufferLight[idx] < (light[2] + 200));
+    shadow = (r->depthBufferLight[idx] < (light[2] + 40));
   }
 
 
@@ -512,6 +517,8 @@ void Rasteriser::ProcessPolygons(Model *model, Renderer::Shader &shader, float *
   }
 }
 
+
+
 void Rasteriser::Draw()
 {
 
@@ -536,19 +543,16 @@ void Rasteriser::Draw()
   light_pos = lighting.position();
   camera_pos = camera.position();
 	vec3 dir = camera.direction();
-  center = light_pos - centerO;
 
+  Projection(-1.0f);
 
-  //Adjust the center, so we're look at the origin of the model
-  //float c = 1.0f;
-  l = (float)length(center);
-  center.x  -=  0.5 * center.x / l;
-  center.z  -=  0.5 *center.z / l;
-  center.y  -=  0.5 *center.y / l;
+  //(0,1.34,1.16) || (1.60126e-05,-0.994069,-0.108753)
+  //LookAt(vec3(0,1,3), vec3(0,1,1) , vec3(0,1,0));
 
-
-  LookAt(vec3(0,1.5,2), vec3(0,1.5,1) , vec3(0,1,0));
-
+  vec3 p(0,1,3);
+  vec3 d(0,0,-1);
+  LookAt( p, d+p , vec3(0,1,0) );
+  //
   //Store the transformation for use in the shader
 
 
@@ -562,28 +566,22 @@ void Rasteriser::Draw()
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
-	Projection(-1.f/ length(light_pos));
+
 
   mat4 MM = modelView * projection ;
 
-  //For all triangles
-  //ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
 
 
-	center = camera_pos - centerO;
+  ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
 
-	center.y = 0;
 
-	//Adjust the center, so we're look at the origin of the model
-	//float c = 1.0f;
-	l = length(center);
-	center.x  -=  center.x / l;
-	center.z  -=  center.z / l;
-	center.y = camera_pos.y;
+  Projection(-1.f/ length(camera_pos-(camera_pos+dir)));
 
-	LookAt(camera_pos, camera_pos+dir, vec3(0,1,0));
-	Projection(-1.f/ length(camera_pos-(camera_pos+dir)));
 
+
+	//LookAt(camera_pos, camera_pos+dir, vec3(0,1,0));
+
+  LookAt(camera_pos, camera_pos+dir, vec3(0,1,0));
 
   //Transform from camera space to light space
   mat4 camera_transform =  MM;

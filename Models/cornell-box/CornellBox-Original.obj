@@ -51,7 +51,7 @@ v   1.00  1.99  -1.04
 
 g rightWall
 usemtl rightWall
-faf -4 -3 -2 -1
+f -4 -3 -2 -1
 
 ## Object leftWall   
 v  -1.01  0.00   0.99
@@ -61,7 +61,7 @@ v  -1.02  1.99   0.99
 
 g leftWall
 usemtl leftWall
-fa -4 -3 -2 -1
+f -4 -3 -2 -1
 
 ## Object shortBox 
 usemtl shortBox

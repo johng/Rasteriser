@@ -19,7 +19,7 @@ private:
 		vec3 dir;
 public:
 
-    Camera (vec3 pos);
+    Camera (vec3 pos,vec3 dir);
 		void setPos(vec3 pos);
 		void setDir(vec3 pos);
 
