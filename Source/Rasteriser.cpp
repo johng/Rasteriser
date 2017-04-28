@@ -535,7 +535,7 @@ void Rasteriser::Draw()
 
   light_pos = lighting.position();
   camera_pos = camera.position();
-
+	vec3 dir = camera.direction();
   center = light_pos - centerO;
 
 
@@ -545,7 +545,6 @@ void Rasteriser::Draw()
   center.x  -=  0.5 * center.x / l;
   center.z  -=  0.5 *center.z / l;
   center.y  -=  0.5 *center.y / l;
-
 
 
   LookAt(vec3(0,1.5,2), vec3(0,1.5,1) , vec3(0,1,0));
@@ -568,7 +567,7 @@ void Rasteriser::Draw()
   mat4 MM = modelView * projection ;
 
   //For all triangles
-  ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
+  //ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
 
 
 	center = camera_pos - centerO;
@@ -582,9 +581,8 @@ void Rasteriser::Draw()
 	center.z  -=  center.z / l;
 	center.y = camera_pos.y;
 
-
-  LookAt(camera_pos, center, up);
-  Projection(-1.f/ length(camera_pos-center));
+	LookAt(camera_pos, camera_pos+dir, vec3(0,1,0));
+	Projection(-1.f/ length(camera_pos-(camera_pos+dir)));
 
 
   //Transform from camera space to light space

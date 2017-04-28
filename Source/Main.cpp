@@ -125,73 +125,67 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 
 	float delta_move = 0.1f;
 
-	vec3 forward (0,0,1);
-	vec3 down (0,1,0);
-	vec3 right (1,0,0);
+	vec3 forward (0,0,delta_move) ;
+	vec3 up (0,delta_move,0);
+	vec3 right (delta_move,0,0);
 
-	forward *= delta_move;
-	down *= delta_move;
-	right *= delta_move;
-
-	//forward *= sf * dt;
-	//right *= sf * dt;
 
 	//Camera Position
 	if( keystate[SDLK_w] )
 	{
 		// Move camera forward
-		yy_camera += delta_move;
+		camera.moveDir(up);
 	}
 	if( keystate[SDLK_s] )
 	{
 		// Move camera backward
-    yy_camera -= delta_move;
+    camera.moveDir(-up);
 	}
 	if( keystate[SDLK_a] )
 	{
 		// Move camera to the left
-		xx_camera -= delta_move ;
+		camera.moveDir(-right);
 
 	}
 	if( keystate[SDLK_d] )
 	{
 		// Move camera to the right
-		xx_camera += delta_move;
+		camera.moveDir(right);
 	}
 
 	if( keystate[SDLK_UP] )
 	{
 		// Move camera forward
-    r_camera += 0.1;
+    camera.movePos(up);
 	}
 	if( keystate[SDLK_DOWN] )
 	{
 		// Move camera backward
-    r_camera -= 0.1;
+		camera.movePos(-up);
 	}
 	if( keystate[SDLK_RIGHT] )
 	{
 		// Move camera to the left
-		camera.angle += delta_move;
+		camera.movePos(right);
 	}
 	if( keystate[SDLK_LEFT] )
 	{
 		// Move camera to the right
-    camera.angle -= delta_move;
+		camera.movePos(-right);
 	}
 
-  float x = sin(xx_camera) * r_camera ;
-  float y = sin(yy_camera) * r_camera;
-  float z = cos(xx_camera) * r_camera ;
 
-  camera.set(vec3(x,yy_camera,z));
+	if( keystate[SDLK_e] )
+	{
+		// Move camera to the right
+		camera.movePos(forward);
+	}
 
-  x = sin(xx_light) * 20 ;
-  z = cos(xx_light) * 20 ;
-  y = sin(yy_light) * 20;
-
-  lighting.set(vec3(0,1,3));
-	//lighting.set(vec3(0,1.98,0));
+	if( keystate[SDLK_q] )
+	{
+		// Move camera to the right
+		camera.movePos(-forward);
+	}
 
 
   if( keystate[SDLK_ESCAPE] )
