@@ -21,8 +21,6 @@ bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *
 
 bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *triangle, RenderData *data) {
 
-  //vec4 p = vec4(1,1,1,1) ;
-
   mat3x4 m = data->renderSpaceVertices;
 	mat3x4 ma = data->worldSpaceVerticies;
 	vec3 world_point = ma*bar;
@@ -39,12 +37,10 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
   if(xx < r->width && yy < r->height && xx >= 0 && yy >= 0){
     int idx =  int(light[0]) + int(light[1])*r->width;
-    shadow = (r->depthBufferLight[idx] < (light[2] + 40));
+    shadow = (r->depthBufferLight[idx] < (light[2] + 200 ));
   }
 
-
-
-
+  //If we have textures, handle differently compared to if we just have materials
   if(r->model->loadedNormalTexture){
 
 
@@ -59,7 +55,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     mat4 mm = transpose(inverse( modelView * projection));
 
-    vec3 vv = vec3( normal*mm);
+    vec3 vv = vec3(normal*mm);
     vec3 n =  normalize( vv);
     vec3 ll = (vec3)(vec4(r->light_pos,1) * modelView);
     vec3 l = normalize(ll);
@@ -71,7 +67,6 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
     unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
-
       //for (int i=0; i<3; i++) colour[i] =  c[i] ;
     for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*( 0.6f* spec+ 1.0f*diff), 255);
 
@@ -82,21 +77,19 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
     if(triangle->material>=0){
 
 
-
-
-
+      //Calculate normal of the three vertices
       vec3 e1 = (vec3)(ma[2]-ma[1]);
       vec3 e2 = (vec3)(ma[1]-ma[0]);
       vec3 verticesNormal = glm::normalize( glm::cross( e2, e1 ) );
 
-			float aIntensity = 0.3;
+			float aIntensity = 0.6;
       vec3 ambient(aIntensity,aIntensity,aIntensity);
 
+      // Materia file values
       vec3 ka = r->model->ambiantReflectance(triangle->material);
       vec3 kd = r->model->diffuseReflectance(triangle->material);
       vec3 ks = r->model->specularReflectance(triangle->material);
       vec3 ke = r->model->glowReflectance(triangle->material);
-
 
 
 			//Phong light implementation
@@ -106,39 +99,26 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 			vec3 V =  normalize(r->camera_pos - world_point);
 			vec3 C = N * (glm::dot(L, N));
 			vec3 R = 2.0f*C - L;
+      vec3 l = normalize(r->light_pos);
+      vec3 H = normalize((V + l));
 
-			//Att(d) = 1/(distance to light)
-			float lengthLightDistance = length( world_point - r->light_pos) * 2.0f ;
-			float Att = 1.0f/(lengthLightDistance);
-
-			/*
-			 * RGB= Ke + // ‘emissive’ material; it glows!
-					Ia*Ka + // ambient light * ambient reflectance
-					Id*Kd*Att*max(0,(N·L)) // diffuse light * diffuse reflectance
-					Is*Ks*Att*(max(0,R·V))Se
-				, // specular light * specular reflectance
-			 * Ia ambient light
-			 * Ij light j's intensity
-			 */
+      //We use a scaling factor so that light drops off
+			float lengthLightDistance = length( world_point - r->light_pos) * 3.0f ;
 
 
-			vec3 l = normalize(r->light_pos);
 
       float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , l ));
-			//cout << lengthLightDistance << endl;
-			vec3 H = normalize((V + l));
+
 			float NdotH = glm::dot( N, H );
 
       for(int i = 0 ; i < 3;i++){
         colour[i] = 255.0f * std::min<float>(
 								ke[i] +
-								0.6 * shadow * ka[i] * ambient[i] +
-								0.9 * kd[i] *  lightVerticesNormal * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance))  , 1.0f) ;
+								1 * shadow * ka[i] * ambient[i] * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance)) +
+								0.4 * kd[i] *  lightVerticesNormal ,1) ;
       }
 
-      //todo implement the rest of the shadaing for the othger mateterial types;
-      //int a = 2;
-
+      //todo implement the rest of the shading for the other mmaterialtypes;
       /* Ka * Ia + Kd * (N * L0) * Ij
        *
        * 1 This is a diffuse illumination model using Lambertian shading. The color includes an ambient and diffuse shading terms for each light source. The formula is
@@ -155,15 +135,14 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       color = KaIa + Kd { SUM j=1..ls, (N*Lj)Ij } + Ks { SUM j=1..ls, ((H*Hj)^Ns)Ij }
 
       Term definitions are: Ia ambient light, Ij light j's intensity,
-       Ka ambient reflectance, Kd diffuse reflectance,
+       Ka ambient reflectance,
+       Kd diffuse reflectance,
        Ks specular reflectance, H unit vector bisector between L and V,
        L unit light vector, N unit surface normal, V unit view vector
       *
 
 
       */
-
-
 
 
 
@@ -325,11 +304,6 @@ void Rasteriser::ViewPort(int x, int y, int w, int h){
   viewPort[0][0] = w/2.f;
   viewPort[1][1] = h/2.f;
   viewPort[2][2] = depth/2.f;
-}
-
-
-inline float cross (vec2 a , vec2 b){
-	return a.x * b.y - a.y * b.x;
 }
 
 
@@ -546,12 +520,9 @@ void Rasteriser::Draw()
 
   Projection(-1.0f);
 
-  //(0,1.34,1.16) || (1.60126e-05,-0.994069,-0.108753)
-  //LookAt(vec3(0,1,3), vec3(0,1,1) , vec3(0,1,0));
-
-  vec3 p(0,1,3);
   vec3 d(0,0,-1);
-  LookAt( p, d+p , vec3(0,1,0) );
+
+  LookAt(light_pos , d+light_pos , vec3(0,1,0) );
   //
   //Store the transformation for use in the shader
 
