@@ -155,6 +155,34 @@ bool ProcessInput(int& t, Camera & camera , Lighting & lighting , bool debug )
 	}
 
 
+  if( keystate[SDLK_h] )
+  {
+    // Move camera to the right
+    lighting.move(-right);
+  }
+
+  if( keystate[SDLK_k] )
+  {
+    // Move camera to the right
+    lighting.move(right);
+  }
+
+  if( keystate[SDLK_u] )
+  {
+    // Move camera to the right
+    lighting.move(up);
+  }
+
+  if( keystate[SDLK_j] )
+  {
+    // Move camera to the right
+    lighting.move(-up);
+  }
+
+
+
+
+
   if( keystate[SDLK_ESCAPE] )
 	{
 		//Quit
