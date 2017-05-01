@@ -197,7 +197,10 @@ vec3 Model::normalMapTexture(vec2 textureCoordinate){
   unsigned char * c = normal.Get(coordinate[0],coordinate[1]);
   vec3 res;
   for (int i=0; i<3; i++) {
-    res[2-i] = ((int) c[i]) / 255.f * 2.f - 1.f;
+    //Each texture is an ZYX colour.
+    //To convert to x,y,z vector we divide by 255 for the range, [0,1]
+    //We then convert to -1,1.
+    res[2-i] = (c[i] / 255) * 2.f - 1.f;
   }
   return res;
 }
