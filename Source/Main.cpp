@@ -18,16 +18,7 @@ int main(int argc, char* argv[] )
 
 	Model model;
 
-	//todo cli loader
-  model.LoadMaterialsFile("./Models/cornell-box/CornellBox-Original.mtl");
-  model.LoadObj("./Models/cornell-box/CornellBox-Original.obj");
-
-
-	//model.LoadObj("./Models/Diablo/diablo3_pose.obj");
-  //model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
-  //model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
-	//model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
-
+	bool diablo = false;
 
 	bool debug = false;
 	bool show_screen = true;
@@ -42,6 +33,27 @@ int main(int argc, char* argv[] )
 			show_screen = false;
 			cout << "Dev mode\n";
 		}
+
+		if(strcmp(arg,"-diablo") == 0){
+			diablo = true;
+			cout << "Dev mode\n";
+		}
+
+	}
+
+	//todo cli loader
+
+	if(!diablo) {
+
+		model.LoadMaterialsFile("./Models/cornell-box/CornellBox-Original.mtl");
+		model.LoadObj("./Models/cornell-box/CornellBox-Original.obj");
+
+	}else {
+
+		model.LoadObj("./Models/Diablo/diablo3_pose.obj");
+		model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
+		model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm_tangent.tga");
+		model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
 
 	}
 
