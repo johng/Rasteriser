@@ -24,7 +24,7 @@ public:
 		};
 
 		Renderer(SDL_Surface* screen);
-		virtual void Draw() = 0;
+		virtual void Draw(bool cut) = 0;
 
 protected:
     SDL_Surface * screen;

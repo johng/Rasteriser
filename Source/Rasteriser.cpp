@@ -464,11 +464,10 @@ void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices
 }
 
 void Rasteriser::ProcessPolygons(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices,
-                                 vec2 *textures, vec4 *outVertices, vec2 *outTextures, bool draw_screen)
+                                 vec2 *textures, vec4 *outVertices, vec2 *outTextures, bool clip ,bool draw_screen)
 {
   int renderCount = model->triangleCount();
   int count;
-  bool clip = true;
   for(int i = 0; i < renderCount; i++) {
 
     Polygon * triangle = model->GetTriangle(i);
@@ -491,14 +490,14 @@ void Rasteriser::ProcessPolygons(Model *model, Renderer::Shader &shader, float *
       Clip(vertices, textures, triangle->verticesCount, outVertices, outTextures, &count);
       DrawPolygon(outVertices, outTextures, count, shader, z_buffer, triangle, draw_screen);
     }else{
-      DrawPolygon(vertices, outTextures, triangle->verticesCount, shader, z_buffer, triangle, draw_screen);
+      DrawPolygon(vertices, textures, triangle->verticesCount, shader, z_buffer, triangle, draw_screen);
     }
   }
 }
 
 
 
-void Rasteriser::Draw()
+void Rasteriser::Draw(bool clip)
 {
 
   SDL_FillRect( screen, 0, 0 );
@@ -537,7 +536,6 @@ void Rasteriser::Draw()
   vec4 vertices[MAX_VERTICIES];
 	vec2 textures[MAX_VERTICIES];
 
-  bool clip = true;
 
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
@@ -548,7 +546,7 @@ void Rasteriser::Draw()
 
 
 
-  ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, false);
+  ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, clip,false);
 
 
   Projection(-1.f/ length(camera_pos-(camera_pos+dir)));
@@ -563,7 +561,7 @@ void Rasteriser::Draw()
   mat4 camera_transform =  MM;
 
   Shadow shadowShader(this, camera_transform);
-  ProcessPolygons(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, true);
+  ProcessPolygons(model, shadowShader, depthBufferCamera, vertices, textures, outVertices, outTextures, clip, true);
 
   if (SDL_MUSTLOCK(screen)) {
     SDL_UnlockSurface(screen);

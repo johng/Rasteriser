@@ -21,6 +21,7 @@ int main(int argc, char* argv[] )
 	bool diablo = false;
 
 	bool debug = false;
+	bool clip = true;
 	bool show_screen = true;
 	for(int i = 1 ; i < argc; i++){
 		char * arg = argv[i] ;
@@ -36,6 +37,11 @@ int main(int argc, char* argv[] )
 
 		if(strcmp(arg,"-diablo") == 0){
 			diablo = true;
+			cout << "Dev mode\n";
+		}
+
+		if(strcmp(arg,"-nclip") == 0){
+			clip = false;
 			cout << "Dev mode\n";
 		}
 
@@ -71,10 +77,10 @@ int main(int argc, char* argv[] )
 	if(show_screen) {
 		while (NoQuitMessageSDL()) {
 			ProcessInput(t, camera, lighting , debug);
-			r.Draw();
+			r.Draw(clip);
 		}
 	}else{
-		r.Draw();
+		r.Draw(clip);
 		int t2 = SDL_GetTicks();
 		float dt = float(t2-t);
 		t = t2;

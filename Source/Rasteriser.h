@@ -17,7 +17,7 @@ class Rasteriser : Renderer {
 
 public:
   Rasteriser(SDL_Surface *screen, Model * model,Camera &camera,Lighting &lighting);
-  void Draw();
+  void Draw(bool cut);
 
 protected:
   vec3 light_pos;
@@ -57,7 +57,7 @@ private:
 
 
   void ProcessPolygons(Model *model, Renderer::Shader &shader, float *z_buffer, vec4 *vertices, vec2 *textures,
-                       vec4 *outVertices, vec2 *outTextures, bool draw_screen);
+                       vec4 *outVertices, vec2 *outTextures,bool clip, bool draw_screen);
 
 };
 
