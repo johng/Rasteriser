@@ -4,7 +4,7 @@
 #include "Lighting.h"
 #include "Rasteriser.h"
 //#include "Renderer.h"
-#define MAX_VERTICIES 10
+#define MAX_VERTICES 10
 
 //Coordinates of the current polygon to draw
 
@@ -12,8 +12,7 @@ bool Rasteriser::DepthShader::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *
 
   vec4 point = data->renderSpaceVertices * bar;
   vec3 p = point / point.w * viewPort;
-
-
+	
   colour = vec3(255, 255, 255) * p / this->r->depth;
   return true;
 }
@@ -317,8 +316,8 @@ void Rasteriser::ViewPort(int x, int y, int w, int h){
 //todo find an efficient way of rendering without textures
 void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices, vec2 * retTextures , int * retCount) {
 
-	vec4 outVerticesArray[MAX_VERTICIES];
-	vec2 outTexturesArray[MAX_VERTICIES];
+	vec4 outVerticesArray[MAX_VERTICES];
+	vec2 outTexturesArray[MAX_VERTICES];
 
 
 	vec4 * outVertices = outVerticesArray;
@@ -378,7 +377,7 @@ void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices
 
 
 
-	vec4 tempArray[MAX_VERTICIES];
+	vec4 tempArray[MAX_VERTICES];
 	outVertices = tempArray;
 
 	//Clip on each axis
@@ -444,11 +443,9 @@ void Clip(vec4 *inVertices, vec2 * inTextures , int inCount , vec4 * retVertices
 			inVertices = tempVertices;
 
       if(retTextures != NULL) {
-
         tempTexture = outTextures;
         outTextures = inTextures;
         inTextures = tempTexture;
-
       }
 
 
@@ -530,30 +527,22 @@ void Rasteriser::Draw(bool clip)
   //
   //Store the transformation for use in the shader
 
-
   DepthShader depthShader(this);
 
-  vec4 vertices[MAX_VERTICIES];
-	vec2 textures[MAX_VERTICIES];
+  vec4 vertices[MAX_VERTICES];
+	vec2 textures[MAX_VERTICES];
 
 
 	int count;
-	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICIES);
-  vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICIES);
+	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICES);
+  vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICES);
 
 
   mat4 MM = modelView * projection ;
 
-
-
   ProcessPolygons(model, depthShader, depthBufferLight, vertices, NULL, outVertices, NULL, clip,false);
 
-
   Projection(-1.f/ length(camera_pos-(camera_pos+dir)));
-
-
-
-	//LookAt(camera_pos, camera_pos+dir, vec3(0,1,0));
 
   LookAt(camera_pos, camera_pos+dir, vec3(0,1,0));
 
