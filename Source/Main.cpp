@@ -58,7 +58,7 @@ int main(int argc, char* argv[] )
 
 		model.LoadObj("./Models/Diablo/diablo3_pose.obj");
 		model.LoadDiffuseTexture("./Models/Diablo/diablo3_pose_diffuse.tga");
-		model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm_tangent.tga");
+		model.LoadNormalMap("./Models/Diablo/diablo3_pose_nm.tga");
 		model.LoadSpecularTexture("./Models/Diablo/diablo3_pose_spec.tga");
 
 	}

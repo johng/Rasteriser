@@ -43,6 +43,7 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
   if(r->model->loadedNormalTexture){
 
 
+
 		mat3x2 text;
 		text[0]  = data->textureCoordinates[0];
 		text[1]  = data->textureCoordinates[1];
@@ -50,29 +51,26 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
 		vec2 textureCoordInterp =  text * bar;
 
-    vec4 normal = vec4(r->model->normalMapTexture(textureCoordInterp),1); // normal
+		vec4 normal = vec4(r->model->normalMapTexture(textureCoordInterp),1); // normal
 
-    mat4 mm = transpose(inverse(projection));
+		mat4 mm = transpose(inverse(  projection));
 
-    vec3 vv = vec3(normal*mm);
-    vec3 n =  normalize( vv);
+		vec3 vv = vec3( normal*mm);
+		vec3 n =  normalize( vv);
+		vec3 ll =  vec4(r->light_pos,1)  ;  // light vector
+		vec3 l = normalize(ll);
+		float ttt = glm::dot(n,l)*2.0f;
+		vec3 tt = n*ttt - l;   // reflected light
+		vec3 ref = normalize(tt);
+		float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
+		float diff = std::max<float>(0.f, glm::dot(n,l));
 
-    vec3 ll = (vec3)(vec4(r->light_pos,1) );
-    vec3 l = normalize(ll);
 
-
-    float ttt = glm::dot(n,l)*2.0f;
-    vec3 tt = n*ttt - l;
-    vec3 ref = normalize(tt);
-
-    float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
-
-    float diff = std::max<float>(0.f, glm::dot(n,l));
 
     unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
       //for (int i=0; i<3; i++) colour[i] =  c[i] ;
-    for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*(1.2f* spec+ 0.2*diff), 255);
+    for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*(1.2f* spec+ 0.6f*diff), 255);
 
     //colour = intensity * std::min<float>(shadow, 1) * cc ;
 

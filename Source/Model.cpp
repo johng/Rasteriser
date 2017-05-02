@@ -200,7 +200,7 @@ vec3 Model::normalMapTexture(vec2 textureCoordinate){
     //Each texture is an ZYX colour.
     //To convert to x,y,z vector we divide by 255 for the range, [0,1]
     //We then convert to -1,1.
-    res[2-i] = (c[i] / 255) * 2.f - 1.f;
+    res[2-i] = (c[i] / 255.0f) * 2.f - 1.f;
   }
   return res;
 }
