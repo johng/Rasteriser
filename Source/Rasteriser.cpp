@@ -43,7 +43,6 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
   if(r->model->loadedNormalTexture){
 
 
-
 		mat3x2 text;
 		text[0]  = data->textureCoordinates[0];
 		text[1]  = data->textureCoordinates[1];
@@ -62,17 +61,13 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 		float ttt = glm::dot(n,l)*2.0f;
 		vec3 tt = n*ttt - l;   // reflected light
 		vec3 ref = normalize(tt);
-		float spec = pow(std::max<float>(ref.z, 0.0f), r->model->specularTexture(textureCoordInterp));
+		float spec = pow(std::max<float>(0.f, ref.z), r->model->specularTexture(textureCoordInterp));
 		float diff = std::max<float>(0.f, glm::dot(n,l));
-
-
 
     unsigned char * diffuse = r->model->diffuseTexture(textureCoordInterp);
 
-      //for (int i=0; i<3; i++) colour[i] =  c[i] ;
     for (int i=0; i<3; i++) colour[2-i] = std::min<float>(20.0f + diffuse[i]*shadow*(1.2f* spec+ 0.6f*diff), 255);
 
-    //colour = intensity * std::min<float>(shadow, 1) * cc ;
 
   }else{
 
@@ -84,17 +79,14 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       vec3 e2 = (vec3)(ma[1]-ma[0]);
       vec3 verticesNormal = glm::normalize( glm::cross( e2, e1 ) );
 
-			float aIntensity = 0.6;
+			float aIntensity = 0.7;
       vec3 ambient(aIntensity,aIntensity,aIntensity);
 
-      // Materia file values
+      // Material file values
       vec3 ka = r->model->ambiantReflectance(triangle->material);
       vec3 kd = r->model->diffuseReflectance(triangle->material);
       vec3 ks = r->model->specularReflectance(triangle->material);
       vec3 ke = r->model->glowReflectance(triangle->material);
-
-
-			//Phong light implementation
 
 			vec3 L = normalize(r->light_pos - world_point);
 			vec3 N = verticesNormal;
@@ -107,8 +99,6 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       //We use a scaling factor so that light drops off
 			float lengthLightDistance = length( world_point - r->light_pos) * 3.0f ;
 
-
-
       float lightVerticesNormal = std::max<float>(0,glm::dot(verticesNormal , l ));
 
 			float NdotH = glm::dot( N, H );
@@ -116,37 +106,9 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
       for(int i = 0 ; i < 3;i++){
         colour[i] = 255.0f * std::min<float>(
 								ke[i] +
-								1 * shadow * ka[i] * ambient[i] * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance)) +
-								0.4 * kd[i] *  lightVerticesNormal ,1) ;
+								1.0f * shadow * ka[i] * ambient[i] * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance)) +
+								0.6f * kd[i] *  lightVerticesNormal ,1) ;
       }
-
-      //todo implement the rest of the shading for the other mmaterialtypes;
-      /* Ka * Ia + Kd * (N * L0) * Ij
-       *
-       * 1 This is a diffuse illumination model using Lambertian shading. The color includes an ambient and diffuse shading terms for each light source. The formula is
-      color = KaIa + Kd { SUM j=1..ls, (N * Lj)Ij }
-
-
-       P:
-       L: unit vector towards light source from P
-			 N: Normal Vector N
-
-
-      2 This is a diffuse and specular illumination model using Lambertian shading and Blinn's interpretation of Phong's specular illumination model (BLIN77).
-      The color includes an ambient constant term, and a diffuse and specular shading term for each light source. The formula is:
-      color = KaIa + Kd { SUM j=1..ls, (N*Lj)Ij } + Ks { SUM j=1..ls, ((H*Hj)^Ns)Ij }
-
-      Term definitions are: Ia ambient light, Ij light j's intensity,
-       Ka ambient reflectance,
-       Kd diffuse reflectance,
-       Ks specular reflectance, H unit vector bisector between L and V,
-       L unit light vector, N unit surface normal, V unit view vector
-      *
-
-
-      */
-
-
 
     }else{
       colour = vec3(0,0,0);
@@ -534,7 +496,6 @@ void Rasteriser::Draw(bool clip)
 	int count;
 	vec4 * outVertices = (vec4*)malloc(sizeof(vec4) * MAX_VERTICES);
   vec2 * outTextures = (vec2*)malloc(sizeof(vec4) * MAX_VERTICES);
-
 
   mat4 MM = modelView * projection ;
 
