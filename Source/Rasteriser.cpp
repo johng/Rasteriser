@@ -103,11 +103,15 @@ bool Rasteriser::Shadow::colour(glm::vec3 bar, glm::vec3 &colour, Polygon *trian
 
 			float NdotH = glm::dot( N, H );
 
+			float Rm = 2 *  glm::dot(V, (glm::dot(L,N) * N) );
+
+
       for(int i = 0 ; i < 3;i++){
         colour[i] = 255.0f * std::min<float>(
 								ke[i] +
 								1.0f * shadow * ka[i] * ambient[i] * (r->lighting.colour()[i] / (4 * 3.14f * lengthLightDistance * lengthLightDistance)) +
-								0.6f * kd[i] *  lightVerticesNormal ,1) ;
+								0.6f * kd[i] *  lightVerticesNormal +
+								0.5f * ks[i] * Rm,1);
       }
 
     }else{
